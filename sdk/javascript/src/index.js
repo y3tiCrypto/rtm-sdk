@@ -1,3 +1,5 @@
+const SDK_VERSION = '1.0.1';
+
 class RaptoreumRPCError extends Error {
   constructor(code, message) {
     super(`RPC Error [${code}]: ${message}`);
@@ -515,6 +517,7 @@ class RaptoreumZmqListener {
 }
 
 module.exports = { 
+  SDK_VERSION,
   RaptoreumClient, 
   RaptoreumRPCError, 
   RaptoreumWallet, 

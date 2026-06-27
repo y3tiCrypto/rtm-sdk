@@ -4,6 +4,8 @@ import urllib.error
 import base64
 import asyncio
 
+__version__ = "1.0.1"
+
 class RaptoreumRPCException(Exception):
     def __init__(self, code, message):
         self.code = code

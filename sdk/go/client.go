@@ -12,6 +12,8 @@ import (
 	"time"
 )
 
+const Version = "1.0.1"
+
 type Client struct {
 	host       string
 	port       int

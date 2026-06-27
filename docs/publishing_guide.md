@@ -46,8 +46,8 @@ This document is a reference guide for repository maintainers when deploying upd
     1.  Update `composer.json` version metadata (or let VCS tagging handle it).
     2.  Commit changes and push a new git tag to GitHub:
         ```bash
-        git tag -a v1.0.0 -m "Release v1.0.0"
-        git push origin v1.0.0
+        git tag -a v1.0.1 -m "Release v1.0.1"
+        git push origin v1.0.1
         ```
     3.  Packagist automatically detects the tag via the repository webhook and publishes the package.
 
@@ -60,12 +60,12 @@ This document is a reference guide for repository maintainers when deploying upd
     1.  Go does not use a central upload registry. It resolves modules directly from version control.
     2.  Tag the release using a sub-path prefix (crucial for mono-repos):
         ```bash
-        git tag sdk/go/v1.0.0
-        git push origin sdk/go/v1.0.0
+        git tag sdk/go/v1.0.1
+        git push origin sdk/go/v1.0.1
         ```
     3.  Developers can now download the module using:
         ```bash
-        go get github.com/Raptor3um/rtm-sdk/sdk/go@v1.0.0
+        go get github.com/Raptor3um/rtm-sdk/sdk/go@v1.0.1
         ```
 
 ---
