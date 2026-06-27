@@ -23,7 +23,7 @@ Below is a quick reference table showing the main packages and how to install th
 | **Python** | `pip install rtm-sdk` | `import raptoreum` |
 | **JavaScript** | `npm install rtm-sdk` | `const { RaptoreumClient } = require('rtm-sdk');` |
 | **TypeScript** | `npm install @rtm-sdk/typescript` | `import { RaptoreumClient } from '@rtm-sdk/typescript';` |
-| **Go** | `go get github.com/Raptor3um/rtm-sdk/go` | `"github.com/Raptor3um/rtm-sdk/go"` |
+| **Go** | `go get github.com/Raptor3um/rtm-sdk/sdk/go` | `"github.com/Raptor3um/rtm-sdk/sdk/go"` |
 | **Rust** | `cargo add rtm-sdk` | `use rtm_sdk::RaptoreumClient;` |
 | **C#** | `dotnet add package RaptoreumSdk` | `using RaptoreumSdk;` |
 | **PHP** | `composer require raptoreum/rtm-sdk` | `use Raptoreum\RaptoreumClient;` |

@@ -12,31 +12,31 @@ Select your language of choice to view setup details, package configurations, an
 
 | Language | Directory | Package Manager | Primary Registry |
 | :--- | :--- | :--- | :--- |
-| **Python** | [`python/`](file:///e:/RTM-Scripts/rtm-sdk/python/) | `pip` | PyPI |
-| **JavaScript** | [`javascript/`](file:///e:/RTM-Scripts/rtm-sdk/javascript/) | `npm` | NPM |
-| **TypeScript** | [`typescript/`](file:///e:/RTM-Scripts/rtm-sdk/typescript/) | `npm` | NPM |
-| **Go** | [`go/`](file:///e:/RTM-Scripts/rtm-sdk/go/) | `go get` | pkg.go.dev |
-| **Rust** | [`rust/`](file:///e:/RTM-Scripts/rtm-sdk/rust/) | `cargo` | crates.io |
-| **C++** | [`cpp/`](file:///e:/RTM-Scripts/rtm-sdk/cpp/) | `vcpkg` | GitHub |
-| **C#** | [`csharp/`](file:///e:/RTM-Scripts/rtm-sdk/csharp/) | `nuget` | NuGet |
-| **Java** | [`java/`](file:///e:/RTM-Scripts/rtm-sdk/java/) | `maven` | Maven Central |
-| **PHP** | [`php/`](file:///e:/RTM-Scripts/rtm-sdk/php/) | `composer` | Packagist |
-| **Ruby** | [`ruby/`](file:///e:/RTM-Scripts/rtm-sdk/ruby/) | `gem` | RubyGems |
-| **Swift** | [`swift/`](file:///e:/RTM-Scripts/rtm-sdk/swift/) | `swift package` | Swift Registry |
-| **Kotlin** | [`kotlin/`](file:///e:/RTM-Scripts/rtm-sdk/kotlin/) | `gradle` | Maven Central |
-| **Dart** | [`dart/`](file:///e:/RTM-Scripts/rtm-sdk/dart/) | `pub` | pub.dev |
-| **Scala** | [`scala/`](file:///e:/RTM-Scripts/rtm-sdk/scala/) | `sbt` | Maven Central |
-| **Perl** | [`perl/`](file:///e:/RTM-Scripts/rtm-sdk/perl/) | `cpan` | CPAN |
-| **Lua** | [`lua/`](file:///e:/RTM-Scripts/rtm-sdk/lua/) | `luarocks` | LuaRocks |
-| **R** | [`r_lang/`](file:///e:/RTM-Scripts/rtm-sdk/r_lang/) | `install.packages` | CRAN |
-| **Haskell** | [`haskell/`](file:///e:/RTM-Scripts/rtm-sdk/haskell/) | `cabal` | Hackage |
-| **Julia** | [`julia/`](file:///e:/RTM-Scripts/rtm-sdk/julia/) | `Pkg` | Julia Registries |
-| **Elixir** | [`elixir/`](file:///e:/RTM-Scripts/rtm-sdk/elixir/) | `mix` | Hex.pm |
-| **Clojure** | [`clojure/`](file:///e:/RTM-Scripts/rtm-sdk/clojure/) | `deps` | Clojars |
-| **Erlang** | [`erlang/`](file:///e:/RTM-Scripts/rtm-sdk/erlang/) | `rebar3` | Hex.pm |
-| **Bash** | [`bash/`](file:///e:/RTM-Scripts/rtm-sdk/bash/) | `curl` | GitHub Releases |
-| **PowerShell**| [`powershell/`](file:///e:/RTM-Scripts/rtm-sdk/powershell/) | `Install-Module` | PowerShell Gallery|
-| **F#** | [`fsharp/`](file:///e:/RTM-Scripts/rtm-sdk/fsharp/) | `nuget` | NuGet |
+| **Python** | [`sdk/python/`](file:///e:/RTM-Scripts/rtm-sdk/sdk/python/) | `pip` | PyPI |
+| **JavaScript** | [`sdk/javascript/`](file:///e:/RTM-Scripts/rtm-sdk/sdk/javascript/) | `npm` | NPM |
+| **TypeScript** | [`sdk/typescript/`](file:///e:/RTM-Scripts/rtm-sdk/sdk/typescript/) | `npm` | NPM |
+| **Go** | [`sdk/go/`](file:///e:/RTM-Scripts/rtm-sdk/sdk/go/) | `go get` | pkg.go.dev |
+| **Rust** | [`sdk/rust/`](file:///e:/RTM-Scripts/rtm-sdk/sdk/rust/) | `cargo` | crates.io |
+| **C++** | [`sdk/cpp/`](file:///e:/RTM-Scripts/rtm-sdk/sdk/cpp/) | `vcpkg` | GitHub |
+| **C#** | [`sdk/csharp/`](file:///e:/RTM-Scripts/rtm-sdk/sdk/csharp/) | `nuget` | NuGet |
+| **Java** | [`sdk/java/`](file:///e:/RTM-Scripts/rtm-sdk/sdk/java/) | `maven` | Maven Central |
+| **PHP** | [`sdk/php/`](file:///e:/RTM-Scripts/rtm-sdk/sdk/php/) | `composer` | Packagist |
+| **Ruby** | [`sdk/ruby/`](file:///e:/RTM-Scripts/rtm-sdk/sdk/ruby/) | `gem` | RubyGems |
+| **Swift** | [`sdk/swift/`](file:///e:/RTM-Scripts/rtm-sdk/sdk/swift/) | `swift package` | Swift Registry |
+| **Kotlin** | [`sdk/kotlin/`](file:///e:/RTM-Scripts/rtm-sdk/sdk/kotlin/) | `gradle` | Maven Central |
+| **Dart** | [`sdk/dart/`](file:///e:/RTM-Scripts/rtm-sdk/sdk/dart/) | `pub` | pub.dev |
+| **Scala** | [`sdk/scala/`](file:///e:/RTM-Scripts/rtm-sdk/sdk/scala/) | `sbt` | Maven Central |
+| **Perl** | [`sdk/perl/`](file:///e:/RTM-Scripts/rtm-sdk/sdk/perl/) | `cpan` | CPAN |
+| **Lua** | [`sdk/lua/`](file:///e:/RTM-Scripts/rtm-sdk/sdk/lua/) | `luarocks` | LuaRocks |
+| **R** | [`sdk/r_lang/`](file:///e:/RTM-Scripts/rtm-sdk/sdk/r_lang/) | `install.packages` | CRAN |
+| **Haskell** | [`sdk/haskell/`](file:///e:/RTM-Scripts/rtm-sdk/sdk/haskell/) | `cabal` | Hackage |
+| **Julia** | [`sdk/julia/`](file:///e:/RTM-Scripts/rtm-sdk/sdk/julia/) | `Pkg` | Julia Registries |
+| **Elixir** | [`sdk/elixir/`](file:///e:/RTM-Scripts/rtm-sdk/sdk/elixir/) | `mix` | Hex.pm |
+| **Clojure** | [`sdk/clojure/`](file:///e:/RTM-Scripts/rtm-sdk/sdk/clojure/) | `deps` | Clojars |
+| **Erlang** | [`sdk/erlang/`](file:///e:/RTM-Scripts/rtm-sdk/sdk/erlang/) | `rebar3` | Hex.pm |
+| **Bash** | [`sdk/bash/`](file:///e:/RTM-Scripts/rtm-sdk/sdk/bash/) | `curl` | GitHub Releases |
+| **PowerShell**| [`sdk/powershell/`](file:///e:/RTM-Scripts/rtm-sdk/sdk/powershell/) | `Install-Module` | PowerShell Gallery|
+| **F#** | [`sdk/fsharp/`](file:///e:/RTM-Scripts/rtm-sdk/sdk/fsharp/) | `nuget` | NuGet |
 
 ---
 

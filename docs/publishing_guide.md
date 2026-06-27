@@ -5,13 +5,13 @@ This document is a reference guide for repository maintainers when deploying upd
 ---
 
 ## 🐍 1. Python (PyPI)
-*   **Directory**: `python/`
+*   **Directory**: `sdk/python/`
 *   **Tooling**: `setuptools`, `wheel`, `twine`
 *   **Procedure**:
-    1.  Update the version in `python/setup.py`.
+    1.  Update the version in `sdk/python/setup.py`.
     2.  Build the source and binary wheels:
         ```bash
-        cd python
+        cd sdk/python
         python setup.py sdist bdist_wheel
         ```
     3.  Upload to PyPI:
@@ -22,13 +22,13 @@ This document is a reference guide for repository maintainers when deploying upd
 ---
 
 ## 📦 2. JavaScript & TypeScript (NPM)
-*   **Directories**: `javascript/`, `typescript/`
+*   **Directories**: `sdk/javascript/`, `sdk/typescript/`
 *   **Tooling**: `npm`
 *   **Procedure**:
     1.  Update the version in `package.json`.
     2.  For TypeScript, build javascript targets:
         ```bash
-        cd typescript
+        cd sdk/typescript
         npm run build
         ```
     3.  Log in and publish:
@@ -40,7 +40,7 @@ This document is a reference guide for repository maintainers when deploying upd
 ---
 
 ## 🐘 3. PHP (Composer / Packagist)
-*   **Directory**: `php/`
+*   **Directory**: `sdk/php/`
 *   **Tooling**: Git, Packagist integration
 *   **Procedure**:
     1.  Update `composer.json` version metadata (or let VCS tagging handle it).
@@ -54,30 +54,30 @@ This document is a reference guide for repository maintainers when deploying upd
 ---
 
 ## 🐹 4. Go (Go Modules)
-*   **Directory**: `go/`
+*   **Directory**: `sdk/go/`
 *   **Tooling**: Git tags
 *   **Procedure**:
     1.  Go does not use a central upload registry. It resolves modules directly from version control.
     2.  Tag the release using a sub-path prefix (crucial for mono-repos):
         ```bash
-        git tag go/v1.0.0
-        git push origin go/v1.0.0
+        git tag sdk/go/v1.0.0
+        git push origin sdk/go/v1.0.0
         ```
     3.  Developers can now download the module using:
         ```bash
-        go get github.com/Raptor3um/rtm-sdk/go@v1.0.0
+        go get github.com/Raptor3um/rtm-sdk/sdk/go@v1.0.0
         ```
 
 ---
 
 ## 🦀 5. Rust (Crates.io)
-*   **Directory**: `rust/`
+*   **Directory**: `sdk/rust/`
 *   **Tooling**: `cargo`
 *   **Procedure**:
-    1.  Update version inside `rust/Cargo.toml`.
+    1.  Update version inside `sdk/rust/Cargo.toml`.
     2.  Log in to crates.io and run verification:
         ```bash
-        cd rust
+        cd sdk/rust
         cargo login <api-token>
         cargo publish --dry-run
         ```
@@ -89,13 +89,13 @@ This document is a reference guide for repository maintainers when deploying upd
 ---
 
 ## 💼 6. C# & F# (.NET NuGet)
-*   **Directories**: `csharp/`, `fsharp/`
+*   **Directories**: `sdk/csharp/`, `sdk/fsharp/`
 *   **Tooling**: `dotnet cli`
 *   **Procedure**:
     1.  Increment `<Version>` in the `.csproj` or `.fsproj` metadata.
     2.  Package the binaries:
         ```bash
-        cd csharp/RaptoreumSdk
+        cd sdk/csharp/RaptoreumSdk
         dotnet pack -c Release
         ```
     3.  Push to NuGet gallery:
