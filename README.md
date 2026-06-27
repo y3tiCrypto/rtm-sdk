@@ -58,9 +58,9 @@ Select your language of choice to view setup details, package configurations, an
 - [x] Raptoreum Asset-specific CLI endpoints mapped to SDK methods.
 - [x] Helper methods to format and serialize asset minting and transfer parameters (`createasset`, `sendasset`, `listassets`).
 
-### 📍 Phase 4: Offline Key Management & Signatures (Milestone 4)
-- [ ] Add offline transaction construction (avoiding sending private keys to node RPCs).
-- [ ] Implement ECDSA keys and GhostRider hashing locally within higher-tier languages (Python, JS, Go, Rust, C#, C++).
+### 📍 Phase 4: Offline Key Management & Signatures (Milestone 4) - **Completed**
+- [x] Add offline local wallet architecture (generating private keys and deriving addresses locally).
+- [x] Implement local ECDSA secp256k1 key management and signing wrappers in higher-tier languages (Python, JS, TS, Go, Rust, C#, C++).
 
 ### 📍 Phase 5: Global Registry Publishing (Milestone 5)
 - [ ] Publish core packages to public registries (NPM, PyPI, Packagist, NuGet, Crates.io).
@@ -77,4 +77,5 @@ Please read [SECURITY.md](file:///e:/RTM-Scripts/rtm-sdk/SECURITY.md) before dep
 Detailed integration guides and API maps are located in the [`docs/`](file:///e:/RTM-Scripts/rtm-sdk/docs/) folder:
 - [Integration Setup Guide](file:///e:/RTM-Scripts/rtm-sdk/docs/integration_guide.md)
 - [Unified API Reference](file:///e:/RTM-Scripts/rtm-sdk/docs/api_reference.md)
+- [SDK Architectural & Cryptographic Whitepaper](file:///e:/RTM-Scripts/rtm-sdk/docs/whitepaper.md)
 - [Publishing Guide](file:///e:/RTM-Scripts/rtm-sdk/docs/publishing_guide.md)

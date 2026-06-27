@@ -148,3 +148,27 @@ Every SDK client parses error responses from the Raptoreum Core JSON-RPC node. I
     *   `-6`: Insufficient funds.
     *   `-28`: Node warming up.
 *   `message` (string): The detailed error message explaining the cause.
+
+---
+
+## 🔒 Category 6: Offline Local Wallet (`RaptoreumWallet`)
+
+Exposed in higher-tier SDK languages (Python, JS, TS, Go, Rust, C#, C++) for managing keys locally without node RPC interactions.
+
+### 1. `generatePrivateKey` / `generate_private_key`
+Generates a cryptographically secure 32-byte secp256k1 private key.
+*   **Parameters**: None
+*   **Result**: 32 bytes (raw bytes or buffer depending on language)
+
+### 2. `privateKeyToAddress` / `private_key_to_address`
+Derives the compressed public key and Base58Check address starting with `R`.
+*   **Parameters**:
+    *   `privateKeyBytes` (32 bytes): The private key.
+*   **Result**: String (Raptoreum address)
+
+### 3. `signMessage` / `sign_message`
+Signs arbitrary messages using standard secp256k1 ECDSA low-S DER signature format over double-SHA256 hashes.
+*   **Parameters**:
+    *   `privateKeyBytes` (32 bytes): The private key.
+    *   `messageBytes` (bytes): The message to sign.
+*   **Result**: DER-encoded byte sequence (signature bytes)

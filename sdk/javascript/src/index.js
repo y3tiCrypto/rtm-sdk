@@ -79,9 +79,66 @@ class RaptoreumClient {
   createAsset(name, amount, options = {}) { return this.request('createasset', [name, amount, options]); }
   sendAsset(assetId, amount, address) { return this.request('sendasset', [assetId, amount, address]); }
 
-  // Smartnode API
+    // Smartnode API
   smartnodeList() { return this.request('smartnodelist'); }
   smartnodeStatus() { return this.request('smartnode', ['status']); }
 }
 
-module.exports = { RaptoreumClient, RaptoreumRPCError };
+const crypto = require('crypto');
+
+class RaptoreumWallet {
+  static generatePrivateKey() {
+    const { privateKey } = crypto.generateKeyPairSync('ec', {
+      namedCurve: 'secp256k1'
+    });
+    return privateKey.export({ type: 'sec1', format: 'der' }).slice(7, 39);
+  }
+
+  static privateKeyToAddress(privateKeyBytes) {
+    const key = crypto.createECDH('secp256k1');
+    key.setPrivateKey(privateKeyBytes);
+    const pubKey = key.getPublicKey(null, 'compressed');
+
+    const sha = crypto.createHash('sha256').update(pubKey).digest();
+    const h160 = crypto.createHash('ripemd160').update(sha).digest();
+
+    const payload = Buffer.concat([Buffer.from([0x3c]), h160]);
+    const hash1 = crypto.createHash('sha256').update(payload).digest();
+    const checksum = crypto.createHash('sha256').update(hash1).digest().slice(0, 4);
+
+    const fullPayload = Buffer.concat([payload, checksum]);
+
+    const B58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+    let n = BigInt('0x' + fullPayload.toString('hex'));
+    let res = "";
+    while (n > 0n) {
+      const r = n % 58n;
+      n = n / 58n;
+      res = B58[Number(r)] + res;
+    }
+    let pad = 0;
+    for (let i = 0; i < fullPayload.length; i++) {
+      if (fullPayload[i] === 0) pad++;
+      else break;
+    }
+    return "1".repeat(pad) + res;
+  }
+
+  static signMessage(privateKeyBytes, messageBytes) {
+    const hash = crypto.createHash('sha256').update(crypto.createHash('sha256').update(messageBytes).digest()).digest();
+    
+    const keyObject = crypto.createPrivateKey({
+      key: Buffer.concat([
+        Buffer.from([0x30, 0x2e, 0x02, 0x01, 0x01, 0x04, 0x20]),
+        privateKeyBytes,
+        Buffer.from([0xa0, 0x07, 0x06, 0x05, 0x2b, 0x81, 0x04, 0x00, 0x0a])
+      ]),
+      format: 'der',
+      type: 'sec1'
+    });
+
+    return crypto.sign(null, hash, keyObject);
+  }
+}
+
+module.exports = { RaptoreumClient, RaptoreumRPCError, RaptoreumWallet };

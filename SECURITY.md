@@ -23,6 +23,11 @@ Because this SDK connects to your Raptoreum Core Wallet Node (`raptoreumd` or `r
 *   **Limit Wallet Access:** If your application only needs to read blockchain data (e.g., block explorer or transaction tracking), run the Raptoreum daemon with wallet disabled (`disablewallet=1`) or use a node without loaded wallets.
 *   **Split wallets:** Keep cold storage funds separate from hot wallets used by the JSON-RPC interface.
 
+### 4. Local Key Management & Offline Signatures
+*   **Avoid sending keys to node:** When using the `RaptoreumWallet` client modules to generate or sign transactions, perform key actions in memory. Never log or output private keys to application logs or databases.
+*   **Secure Memory Erasure**: When generating private keys in memory, zero out the variables or buffers immediately after deriving the address or outputting the signature.
+*   **Random Entropy Quality**: Ensure the execution runtime has access to cryptographically secure random number generators (RNGs) e.g., `/dev/urandom` on Unix or CryptGenRandom/BCryptGenRandom on Windows.
+
 ---
 
 ## Reporting a Vulnerability

@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(CURL REQUIRED)
+find_package(OpenSSL REQUIRED)
 
 add_library(raptoreum_client
     src/raptoreum_client.cpp
@@ -19,6 +20,7 @@ target_include_directories(raptoreum_client
 target_link_libraries(raptoreum_client
     PRIVATE
         CURL::libcurl
+        OpenSSL::Crypto
 )
 
 add_executable(raptoreum_example example.cpp)

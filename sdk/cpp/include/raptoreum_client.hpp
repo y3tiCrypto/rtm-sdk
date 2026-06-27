@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <stdexcept>
+#include <vector>
 
 namespace raptoreum {
 
@@ -50,6 +51,13 @@ private:
     std::string password_;
     bool use_ssl_;
     std::string url_;
+};
+
+class RaptoreumWallet {
+public:
+    static std::vector<unsigned char> generate_private_key();
+    static std::string private_key_to_address(const std::vector<unsigned char>& private_key_bytes);
+    static std::vector<unsigned char> sign_message(const std::vector<unsigned char>& private_key_bytes, const std::vector<unsigned char>& message_bytes);
 };
 
 } // namespace raptoreum

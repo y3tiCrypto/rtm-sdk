@@ -10,7 +10,8 @@ Explore our guides to get started with Raptoreum integration:
 
 1.  **[Integration Setup Guide](file:///e:/RTM-Scripts/rtm-sdk/docs/integration_guide.md)**: Learn how to set up `raptoreumd`, configure your node's JSON-RPC server, secure your connection, and test network access.
 2.  **[API Reference](file:///e:/RTM-Scripts/rtm-sdk/docs/api_reference.md)**: Explore the detailed mapping of standard RPC methods, wallet methods, asset layers, and smartnode controllers.
-3.  **[Publishing Guide](file:///e:/RTM-Scripts/rtm-sdk/docs/publishing_guide.md)**: Maintenance documentation on packaging and publishing libraries to public registries.
+3.  **[SDK Architectural & Cryptographic Whitepaper](file:///e:/RTM-Scripts/rtm-sdk/docs/whitepaper.md)**: An in-depth overview of the cryptographic specifications, secp256k1 implementation details, and low-S ECDSA DER-encoded signature models.
+4.  **[Publishing Guide](file:///e:/RTM-Scripts/rtm-sdk/docs/publishing_guide.md)**: Maintenance documentation on packaging and publishing libraries to public registries.
 
 ---
 
