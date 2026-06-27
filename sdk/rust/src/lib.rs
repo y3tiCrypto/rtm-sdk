@@ -1,4 +1,5 @@
 pub mod wallet;
+pub mod transaction;
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;

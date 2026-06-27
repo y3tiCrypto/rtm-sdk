@@ -172,3 +172,41 @@ Signs arbitrary messages using standard secp256k1 ECDSA low-S DER signature form
     *   `privateKeyBytes` (32 bytes): The private key.
     *   `messageBytes` (bytes): The message to sign.
 *   **Result**: DER-encoded byte sequence (signature bytes)
+
+---
+
+## 🔨 Category 7: Offline Transaction Serialization & Builder (`RaptoreumTransactionBuilder`)
+
+Exposed in higher-tier SDK languages (Python, JS, TS, Go, Rust, C#, C++) for building, signing, and serializing transactions offline.
+
+### 1. `addInput` / `add_input`
+Adds a transaction input (UTXO) to spend.
+*   **Parameters**:
+    *   `txid` (string): The transaction ID of the UTXO.
+    *   `vout` (number): The output index.
+    *   `scriptPubKey` (string/bytes): The public key script of the output.
+    *   `amountRtm` (number/string): The amount of RTM in the output.
+
+### 2. `addOutput` / `add_output`
+Adds a target payment output.
+*   **Parameters**:
+    *   `address` (string): The receiver's Raptoreum address (verified and decoded locally).
+    *   `amountRtm` (number/string): The amount of RTM to transfer.
+
+### 3. `serialize`
+Serializes the transaction into its raw byte array representation.
+*   **Parameters**: None
+*   **Result**: Serialized byte sequence (Buffer/bytes) representing raw transaction hex.
+
+### 4. `sign`
+Signs all added inputs using standard double-SHA256 signature pre-images and inserts signature scripts.
+*   **Parameters**:
+    *   `privateKeyBytes` (32 bytes): The private key of the inputs.
+
+### 5. `selectInputs` / `select_inputs` (Static)
+Performs local FIFO UTXO coin selection and calculates transaction fees.
+*   **Parameters**:
+    *   `utxos` (array): List of available UTXOs.
+    *   `targetAmountRtm` (number/string): Target amount to spend.
+    *   `feeRateSatByte` (number, default: 1): Fee rate in Satoshis per byte.
+*   **Result**: Object/Pair containing array of selected UTXOs and the calculated fee.

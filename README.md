@@ -66,9 +66,9 @@ Select your language of choice to view setup details, package configurations, an
 - [x] Publish core packages to public registries (NPM, PyPI, Packagist, NuGet, Crates.io).
 - [x] Establish automated GitHub Action pipelines for automated publishing.
 
-### 📍 Phase 6: Offline Transaction Serialization & Local UTXO Selection (Milestone 6)
-- [ ] Implement local coin selection (FIFO, Knapsack) algorithms to manage inputs/fees offline.
-- [ ] Build offline raw transaction serialization wrappers across the client packages.
+### 📍 Phase 6: Offline Transaction Serialization & Local UTXO Selection (Milestone 6) - **Completed**
+- [x] Implement local coin selection (FIFO, Knapsack) algorithms to manage inputs/fees offline.
+- [x] Build offline raw transaction serialization wrappers across the client packages.
 
 ### 📍 Phase 7: Live Event Streaming (Milestone 7)
 - [ ] Add ZeroMQ subscription modules to capture block and transaction alerts from the local node.
@@ -93,4 +93,5 @@ Detailed integration guides and API maps are located in the [`docs/`](file:///e:
 - [Integration Setup Guide](file:///e:/RTM-Scripts/rtm-sdk/docs/integration_guide.md)
 - [Unified API Reference](file:///e:/RTM-Scripts/rtm-sdk/docs/api_reference.md)
 - [SDK Architectural & Cryptographic Whitepaper](file:///e:/RTM-Scripts/rtm-sdk/docs/whitepaper.md)
+- [Docker Node Deployment Guide](file:///e:/RTM-Scripts/rtm-sdk/docs/docker_setup.md)
 - [Publishing Guide](file:///e:/RTM-Scripts/rtm-sdk/docs/publishing_guide.md)

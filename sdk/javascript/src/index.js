@@ -139,6 +139,189 @@ class RaptoreumWallet {
 
     return crypto.sign(null, hash, keyObject);
   }
+
+  static privateKeyToPublicKey(privateKeyBytes) {
+    const key = crypto.createECDH('secp256k1');
+    key.setPrivateKey(privateKeyBytes);
+    return key.getPublicKey(null, 'compressed');
+  }
 }
 
-module.exports = { RaptoreumClient, RaptoreumRPCError, RaptoreumWallet };
+function decodeBase58(str) {
+  const B58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+  let n = 0n;
+  for (let i = 0; i < str.length; i++) {
+    const c = str[i];
+    const index = B58.indexOf(c);
+    if (index === -1) throw new Error("Invalid Base58 character");
+    n = n * 58n + BigInt(index);
+  }
+  let hex = n.toString(16);
+  if (hex.length % 2 !== 0) hex = '0' + hex;
+  let bytes = Buffer.from(hex, 'hex');
+  if (bytes.length < 25) {
+    bytes = Buffer.concat([Buffer.alloc(25 - bytes.length), bytes]);
+  }
+  return bytes;
+}
+
+function encodeVarInt(n) {
+  if (n < 0xfd) {
+    return Buffer.from([n]);
+  } else if (n <= 0xffff) {
+    const buf = Buffer.alloc(3);
+    buf[0] = 0xfd;
+    buf.writeUInt16LE(n, 1);
+    return buf;
+  } else if (n <= 0xffffffff) {
+    const buf = Buffer.alloc(5);
+    buf[0] = 0xfe;
+    buf.writeUInt32LE(n, 1);
+    return buf;
+  } else {
+    const buf = Buffer.alloc(9);
+    buf[0] = 0xff;
+    buf.writeBigUInt64LE(BigInt(n), 1);
+    return buf;
+  }
+}
+
+class RaptoreumTransactionBuilder {
+  constructor() {
+    this.inputs = [];
+    this.outputs = [];
+    this.locktime = 0;
+    this.version = 1;
+  }
+
+  addInput(txid, vout, scriptPubKey, amountRtm) {
+    this.inputs.push({
+      txid: txid,
+      vout: parseInt(vout),
+      scriptPubKey: typeof scriptPubKey === 'string' ? Buffer.from(scriptPubKey, 'hex') : scriptPubKey,
+      amount: BigInt(Math.round(parseFloat(amountRtm) * 100000000)),
+      scriptSig: Buffer.alloc(0)
+    });
+  }
+
+  addOutput(address, amountRtm) {
+    const full = decodeBase58(address);
+    const payload = full.slice(0, 21);
+    const checksum = full.slice(21);
+    const h1 = crypto.createHash('sha256').update(payload).digest();
+    const h2 = crypto.createHash('sha256').update(h1).digest();
+    if (!h2.slice(0, 4).equals(checksum)) {
+      throw new Error("Invalid address checksum");
+    }
+    const hash160 = payload.slice(1);
+    
+    const script = Buffer.concat([
+      Buffer.from([0x76, 0xa9, 0x14]),
+      hash160,
+      Buffer.from([0x88, 0xac])
+    ]);
+    
+    this.outputs.push({
+      value: BigInt(Math.round(parseFloat(amountRtm) * 100000000)),
+      script: script
+    });
+  }
+
+  serialize() {
+    const parts = [];
+    const verBuf = Buffer.alloc(4);
+    verBuf.writeUInt32LE(this.version, 0);
+    parts.push(verBuf);
+    
+    parts.push(encodeVarInt(this.inputs.length));
+    for (const txIn of this.inputs) {
+      const txidBuf = Buffer.from(txIn.txid, 'hex').reverse();
+      parts.push(txidBuf);
+      
+      const voutBuf = Buffer.alloc(4);
+      voutBuf.writeUInt32LE(txIn.vout, 0);
+      parts.push(voutBuf);
+      
+      parts.push(encodeVarInt(txIn.scriptSig.length));
+      parts.push(txIn.scriptSig);
+      
+      const seqBuf = Buffer.alloc(4);
+      seqBuf.writeUInt32LE(0xffffffff, 0);
+      parts.push(seqBuf);
+    }
+    
+    parts.push(encodeVarInt(this.outputs.length));
+    for (const txOut of this.outputs) {
+      const valBuf = Buffer.alloc(8);
+      valBuf.writeBigUInt64LE(txOut.value, 0);
+      parts.push(valBuf);
+      
+      parts.push(encodeVarInt(txOut.script.length));
+      parts.push(txOut.script);
+    }
+    
+    const ltBuf = Buffer.alloc(4);
+    ltBuf.writeUInt32LE(this.locktime, 0);
+    parts.push(ltBuf);
+    
+    return Buffer.concat(parts);
+  }
+
+  sign(privateKeyBytes) {
+    const pubkey = RaptoreumWallet.privateKeyToPublicKey(privateKeyBytes);
+    
+    for (let i = 0; i < this.inputs.length; i++) {
+      const originalScriptSigs = this.inputs.map(x => x.scriptSig);
+      
+      for (let j = 0; j < this.inputs.length; j++) {
+        if (j === i) {
+          this.inputs[j].scriptSig = this.inputs[j].scriptPubKey;
+        } else {
+          this.inputs[j].scriptSig = Buffer.alloc(0);
+        }
+      }
+      
+      const preimage = Buffer.concat([
+        this.serialize(),
+        Buffer.from([0x01, 0x00, 0x00, 0x00])
+      ]);
+      
+      const sig = RaptoreumWallet.signMessage(privateKeyBytes, preimage);
+      const sigWithHash = Buffer.concat([sig, Buffer.from([0x01])]);
+      
+      const scriptSig = Buffer.concat([
+        Buffer.from([sigWithHash.length]),
+        sigWithHash,
+        Buffer.from([pubkey.length]),
+        pubkey
+      ]);
+      
+      for (let j = 0; j < this.inputs.length; j++) {
+        this.inputs[j].scriptSig = originalScriptSigs[j];
+      }
+      this.inputs[i].scriptSig = scriptSig;
+    }
+  }
+
+  static selectInputs(utxos, targetAmountRtm, feeRateSatByte = 1) {
+    const targetSat = BigInt(Math.round(parseFloat(targetAmountRtm) * 100000000));
+    let accumulated = 0n;
+    const selected = [];
+    const numOutputs = 2;
+    
+    for (const utxo of utxos) {
+      selected.push(utxo);
+      accumulated += BigInt(Math.round(parseFloat(utxo.amount) * 100000000));
+      
+      const size = 148 * selected.length + 34 * numOutputs + 10;
+      const fee = BigInt(size * feeRateSatByte);
+      
+      if (accumulated >= targetSat + fee) {
+        return { selected, fee: Number(fee) };
+      }
+    }
+    throw new Error("Insufficient funds");
+  }
+}
+
+module.exports = { RaptoreumClient, RaptoreumRPCError, RaptoreumWallet, RaptoreumTransactionBuilder };

@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  raptoreum-node:
+    build: .
+    image: raptoreum-node:latest
+    container_name: raptoreum-node
+    ports:
+      - "8766:8766"     # Mainnet JSON-RPC
+      - "8767:8767"     # Mainnet P2P
+      - "18766:18766"   # Testnet JSON-RPC
+      - "18767:18767"   # Testnet P2P
+    volumes:
+      - raptoreum-data:/root/.raptoreumcore
+    restart: unless-stopped
+
+volumes:
+  raptoreum-data:

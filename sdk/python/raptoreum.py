@@ -230,3 +230,130 @@ class RaptoreumWallet:
             der.extend(s_bytes)
             return bytes(der)
 
+    @classmethod
+    def private_key_to_public_key(cls, private_key_bytes):
+        k = int.from_bytes(private_key_bytes, 'big')
+        pub_point = cls._ec_mul(cls.G, k)
+        prefix = b'\x02' if pub_point[1] % 2 == 0 else b'\x03'
+        return prefix + pub_point[0].to_bytes(32, 'big')
+
+
+class RaptoreumTransactionBuilder:
+    def __init__(self):
+        self.inputs = []
+        self.outputs = []
+        self.locktime = 0
+        self.version = 1
+
+    def add_input(self, txid, vout, script_pub_key, amount_rtm):
+        self.inputs.append({
+            'txid': txid,
+            'vout': int(vout),
+            'script_pub_key': bytes.fromhex(script_pub_key) if isinstance(script_pub_key, str) else script_pub_key,
+            'amount': int(float(amount_rtm) * 100000000),
+            'script_sig': b''
+        })
+
+    def add_output(self, address, amount_rtm):
+        hash160 = self._address_to_hash160(address)
+        # P2PKH scriptPubKey: OP_DUP OP_HASH160 <hash160> OP_EQUALVERIFY OP_CHECKSIG
+        script = b'\x76\xa9\x14' + hash160 + b'\x88\xac'
+        self.outputs.append({
+            'value': int(float(amount_rtm) * 100000000),
+            'script': script
+        })
+
+    def _address_to_hash160(self, address):
+        B58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
+        n = 0
+        for char in address:
+            n = n * 58 + B58.index(char)
+        full = n.to_bytes(25, 'big')
+        payload = full[:21]
+        checksum = full[21:]
+        h1 = hashlib.sha256(payload).digest()
+        h2 = hashlib.sha256(h1).digest()
+        if h2[:4] != checksum:
+            raise ValueError("Invalid checksum")
+        return payload[1:]
+
+    def _encode_varint(self, n):
+        if n < 0xfd:
+            return bytes([n])
+        elif n <= 0xffff:
+            return b'\xfd' + struct.pack('<H', n)
+        elif n <= 0xffffffff:
+            return b'\xfe' + struct.pack('<I', n)
+        else:
+            return b'\xff' + struct.pack('<Q', n)
+
+    def serialize(self):
+        res = struct.pack('<I', self.version)
+        res += self._encode_varint(len(self.inputs))
+        for tx_in in self.inputs:
+            txid_bytes = bytes.fromhex(tx_in['txid'])[::-1]
+            res += txid_bytes
+            res += struct.pack('<I', tx_in['vout'])
+            res += self._encode_varint(len(tx_in['script_sig']))
+            res += tx_in['script_sig']
+            res += struct.pack('<I', 0xffffffff)  # sequence
+        res += self._encode_varint(len(self.outputs))
+        for tx_out in self.outputs:
+            res += struct.pack('<Q', tx_out['value'])
+            res += self._encode_varint(len(tx_out['script']))
+            res += tx_out['script']
+        res += struct.pack('<I', self.locktime)
+        return res
+
+    def sign(self, private_key_bytes):
+        pubkey = RaptoreumWallet.private_key_to_public_key(private_key_bytes)
+        
+        # Sign each input
+        for i in range(len(self.inputs)):
+            # Save original inputs script_sig
+            original_script_sigs = [tx_in['script_sig'] for tx_in in self.inputs]
+            
+            # Temporary state for signing input i
+            for j in range(len(self.inputs)):
+                if j == i:
+                    self.inputs[j]['script_sig'] = self.inputs[j]['script_pub_key']
+                else:
+                    self.inputs[j]['script_sig'] = b''
+            
+            # Serialize pre-image and append SIGHASH_ALL (0x00000001 in little-endian / big-endian depending on spec, standard is 4 bytes little endian 0x01000000)
+            preimage = self.serialize() + b'\x01\x00\x00\x00'
+            
+            # Sign double SHA256 of the preimage
+            sig = RaptoreumWallet.sign_message(private_key_bytes, preimage)
+            
+            # Append SIGHASH_ALL byte (0x01)
+            sig_with_hash = sig + b'\x01'
+            
+            # Build scriptSig: OP_DATA_SIG <sig> OP_DATA_PUBKEY <pubkey>
+            script_sig = bytes([len(sig_with_hash)]) + sig_with_hash + bytes([len(pubkey)]) + pubkey
+            
+            # Restore script_sigs and save signature for i
+            for j in range(len(self.inputs)):
+                self.inputs[j]['script_sig'] = original_script_sigs[j]
+            self.inputs[i]['script_sig'] = script_sig
+
+    @staticmethod
+    def select_inputs(utxos, target_amount_rtm, fee_rate_sat_byte=1):
+        target_sat = int(float(target_amount_rtm) * 100000000)
+        selected = []
+        accumulated = 0
+        num_outputs = 2 # standard receiver + change
+        
+        for utxo in utxos:
+            selected.append(utxo)
+            accumulated += int(float(utxo['amount']) * 100000000)
+            
+            # Size estimate: 148 * inputs + 34 * outputs + 10
+            size = 148 * len(selected) + 34 * num_outputs + 10
+            fee = size * fee_rate_sat_byte
+            
+            if accumulated >= (target_sat + fee):
+                return selected, fee
+                
+        raise ValueError("Insufficient funds")
+

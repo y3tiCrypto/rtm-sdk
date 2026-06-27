@@ -9,6 +9,7 @@ find_package(OpenSSL REQUIRED)
 
 add_library(raptoreum_client
     src/raptoreum_client.cpp
+    src/raptoreum_tx.cpp
 )
 
 target_include_directories(raptoreum_client
