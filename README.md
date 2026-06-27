@@ -78,8 +78,10 @@ Select your language of choice to view setup details, package configurations, an
 - [x] Implement client-side connection pooling (HTTP persistent connections) to minimize handshake latency.
 - [x] Introduce JSON-RPC array request batching and adaptive exponential backoff rate limiting.
 
-### 📍 Phase 9: Unified Exception Taxonomy (Milestone 9) - **Completed**
-- [x] Replace generic exception classes with specific typed structures (e.g. `InsufficientFundsException`, `WalletLockedException`).
+### 📍 Phase 9: Unified Exception Taxonomy & Monorepo Versioning (Milestone 9) - **Completed**
+- [x] Replace generic exception classes with specific typed structures (e.g. `InsufficientFundsException`, `WalletLockedException`, `InvalidAddressException`, `NodeWarmingUpException`).
+- [x] Implement a central unified version manager (`version.json` & `scripts/bump_version.py`) to synchronize versions and documentation references monorepo-wide.
+- [x] Compile a comprehensive security audit report (`docs/audit.md`) detailing cryptographic safety rules and zero-dependency verification.
 
 ---
 
