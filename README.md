@@ -94,4 +94,5 @@ Detailed integration guides and API maps are located in the [`docs/`](file:///e:
 - [Unified API Reference](file:///e:/RTM-Scripts/rtm-sdk/docs/api_reference.md)
 - [SDK Architectural & Cryptographic Whitepaper](file:///e:/RTM-Scripts/rtm-sdk/docs/whitepaper.md)
 - [Docker Node Deployment Guide](file:///e:/RTM-Scripts/rtm-sdk/docs/docker_setup.md)
+- [Security & Cryptographic Audit](file:///e:/RTM-Scripts/rtm-sdk/docs/audit.md)
 - [Publishing Guide](file:///e:/RTM-Scripts/rtm-sdk/docs/publishing_guide.md)
