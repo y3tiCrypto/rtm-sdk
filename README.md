@@ -49,10 +49,10 @@ Select your language of choice to view setup details, package configurations, an
 - [x] Read-only blockchain queries (`getblockchaininfo`, `getblockcount`, `getblock`, `getbestblockhash`).
 - [x] Connection testing scripts and usage guides for every folder.
 
-### 📍 Phase 2: Wallet & Transaction Writing (Milestone 2)
-- [ ] Direct credential-signed transaction execution (`sendtoaddress`, `sendmany`).
-- [ ] Safe JSON parsing wrappers for outputs.
-- [ ] Support for address creation and verification commands (`getnewaddress`, `validateaddress`).
+### 📍 Phase 2: Wallet & Transaction Writing (Milestone 2) - **Completed**
+- [x] Direct credential-signed transaction execution (`sendtoaddress`, `sendmany`).
+- [x] Custom RPC exceptions (`RaptoreumRPCException` / `RaptoreumRPCError`) for safe error parsing.
+- [x] Support for address creation and verification commands (`getnewaddress`, `validateaddress`).
 
 ### 📍 Phase 3: Asset Layer Integration (Milestone 3)
 - [ ] Raptoreum Asset-specific CLI endpoints mapped to SDK methods.
