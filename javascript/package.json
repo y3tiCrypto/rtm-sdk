@@ -1,0 +1,21 @@
+{
+  "name": "rtm-sdk",
+  "version": "1.0.0",
+  "description": "Official JavaScript SDK for Raptoreum (RTM) JSON-RPC API",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "node example.js"
+  },
+  "author": "Raptoreum Developers",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "raptoreum",
+    "rtm",
+    "rpc",
+    "blockchain",
+    "sdk"
+  ]
+}

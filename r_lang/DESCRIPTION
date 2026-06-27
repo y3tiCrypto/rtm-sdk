@@ -1,0 +1,13 @@
+Package: rtmsdk
+Type: Package
+Title: Official R SDK for Raptoreum (RTM) JSON-RPC API
+Version: 1.0.0
+Author: Raptoreum Developers <dev@raptoreum.com>
+Maintainer: Raptoreum Developers <dev@raptoreum.com>
+Description: Connects to a Raptoreum Core Node via JSON-RPC.
+License: MIT
+Encoding: UTF-8
+Imports:
+    httr,
+    jsonlite
+RoxygenNote: 7.2.3

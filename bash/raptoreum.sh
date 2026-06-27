@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+
+# Raptoreum CLI RPC Shell Wrapper
+# Usage: source raptoreum.sh && rtm_request <method> <params_json_array>
+
+RTM_HOST=${RTM_RPC_HOST:-"127.0.0.1"}
+RTM_PORT=${RTM_RPC_PORT:-8766}
+RTM_USER=${RTM_RPC_USER:-""}
+RTM_PASS=${RTM_RPC_PASS:-""}
+RTM_USE_SSL=${RTM_RPC_SSL:-false}
+
+rtm_request() {
+  local method="$1"
+  local params="${2:-[]}"
+  local scheme="http"
+  if [ "$RTM_USE_SSL" = true ]; then
+    scheme="https"
+  fi
+  local url="${scheme}://${RTM_HOST}:${RTM_PORT}/"
+  
+  local payload
+  payload=$(cat <<EOF
+{
+  "jsonrpc": "1.0",
+  "id": "rtm-sdk-bash",
+  "method": "${method}",
+  "params": ${params}
+}
+EOF
+)
+
+  local auth=""
+  if [ -n "$RTM_USER" ] || [ -n "$RTM_PASS" ]; then
+    auth="-u ${RTM_USER}:${RTM_PASS}"
+  fi
+
+  curl -s -X POST \
+       -H "Content-Type: application/json" \
+       $auth \
+       -d "$payload" \
+       "$url"
+}
+
+rtm_getblockchaininfo() {
+  rtm_request "getblockchaininfo" "[]"
+}
+
+rtm_getblockcount() {
+  rtm_request "getblockcount" "[]"
+}
+
+rtm_getbalance() {
+  rtm_request "getbalance" "[]"
+}

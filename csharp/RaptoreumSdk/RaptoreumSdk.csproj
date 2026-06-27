@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net6.0;net8.0</TargetFrameworks>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Version>1.0.0</Version>
+    <Authors>Raptoreum Developers</Authors>
+    <Company>Raptoreum</Company>
+    <Description>Official .NET SDK for Raptoreum (RTM) JSON-RPC API</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/Raptor3um/rtm-sdk</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Raptor3um/rtm-sdk</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>raptoreum rtm rpc sdk blockchain</PackageTags>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="System.Text.Json" Version="8.0.5" />
+  </ItemGroup>
+</Project>
