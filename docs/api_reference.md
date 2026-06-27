@@ -247,3 +247,22 @@ A request builder to execute multiple JSON-RPC calls in a single network round-t
 Properties to configure client-side resilient retries on network drop or HTTP status code `429` (Too Many Requests):
 *   `maxRetries` / `max_retries`: Number of retry attempts (default: 3).
 *   `retryDelay` / `retry_delay`: Delay base in seconds or milliseconds (default: 1.0s / 1000ms). Retries execute automatically using exponential backoff with random jitter.
+
+---
+
+## ⚠️ Category 10: Exception Handling & Error Codes
+
+Exceptions mapped to JSON-RPC error codes to allow clean error parsing and catching:
+
+### 1. Exception Mapping Table
+*   **`InvalidAddressException`** / **`InvalidAddressError`** (Code `-5`): Provided address string or private key is malformed.
+*   **`InsufficientFundsException`** / **`InsufficientFundsError`** (Code `-6`): Wallet balance is too low for the spend transaction.
+*   **`WalletLockedException`** / **`WalletLockedError`** (Code `-13`): Operation requires wallet passphrase decryption first.
+*   **`NodeWarmingUpException`** / **`NodeWarmingUpError`** (Code `-28`): Daemon is booting, validating blocks, or warming up.
+
+### 2. Go Error Checks
+Go implements error checks using simple checker functions:
+*   `IsInvalidAddress(err error) bool`
+*   `IsInsufficientFunds(err error) bool`
+*   `IsWalletLocked(err error) bool`
+*   `IsNodeWarmingUp(err error) bool`

@@ -6,6 +6,48 @@ class RaptoreumRPCError extends Error {
   }
 }
 
+class InvalidAddressError extends RaptoreumRPCError {
+  constructor(code, message) {
+    super(code, message);
+    this.name = 'InvalidAddressError';
+  }
+}
+
+class InsufficientFundsError extends RaptoreumRPCError {
+  constructor(code, message) {
+    super(code, message);
+    this.name = 'InsufficientFundsError';
+  }
+}
+
+class WalletLockedError extends RaptoreumRPCError {
+  constructor(code, message) {
+    super(code, message);
+    this.name = 'WalletLockedError';
+  }
+}
+
+class NodeWarmingUpError extends RaptoreumRPCError {
+  constructor(code, message) {
+    super(code, message);
+    this.name = 'NodeWarmingUpError';
+  }
+}
+
+function getRPCError(code, message) {
+  if (code === -5) {
+    return new InvalidAddressError(code, message);
+  } else if (code === -6) {
+    return new InsufficientFundsError(code, message);
+  } else if (code === -13) {
+    return new WalletLockedError(code, message);
+  } else if (code === -28) {
+    return new NodeWarmingUpError(code, message);
+  } else {
+    return new RaptoreumRPCError(code, message);
+  }
+}
+
 class RaptoreumClient {
   constructor({ host = '127.0.0.1', port = 8766, user = '', password = '', useSsl = false } = {}) {
     this.host = host;
@@ -68,7 +110,7 @@ class RaptoreumClient {
 
     const json = await this._post(payload);
     if (json.error) {
-      throw new RaptoreumRPCError(json.error.code, json.error.message);
+      throw getRPCError(json.error.code, json.error.message);
     }
 
     return json.result;
@@ -100,7 +142,7 @@ class RaptoreumBatch {
     const json = await this.client._post(this.requests);
     if (!Array.isArray(json)) {
       if (json && json.error) {
-        throw new RaptoreumRPCError(json.error.code, json.error.message);
+        throw getRPCError(json.error.code, json.error.message);
       }
       throw new Error("Invalid batch response from server");
     }
@@ -112,7 +154,7 @@ class RaptoreumBatch {
         const idx = parseInt(id.split('-').pop(), 10);
         if (idx >= 0 && idx < results.length) {
           if (resp.error) {
-            results[idx] = new RaptoreumRPCError(resp.error.code, resp.error.message);
+            results[idx] = getRPCError(resp.error.code, resp.error.message);
           } else {
             results[idx] = resp.result;
           }
@@ -479,5 +521,9 @@ module.exports = {
   RaptoreumTransactionBuilder,
   RaptoreumWebSocketClient,
   RaptoreumZmqListener,
-  RaptoreumBatch
+  RaptoreumBatch,
+  InvalidAddressError,
+  InsufficientFundsError,
+  WalletLockedError,
+  NodeWarmingUpError
 };

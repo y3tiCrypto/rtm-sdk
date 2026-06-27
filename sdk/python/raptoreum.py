@@ -10,6 +10,33 @@ class RaptoreumRPCException(Exception):
         self.message = message
         super().__init__(f"RPC Error [{code}]: {message}")
 
+class InvalidAddressException(RaptoreumRPCException):
+    pass
+
+class InsufficientFundsException(RaptoreumRPCException):
+    pass
+
+class WalletLockedException(RaptoreumRPCException):
+    pass
+
+class NodeWarmingUpException(RaptoreumRPCException):
+    pass
+
+def get_rpc_error(code, message):
+    if code == -5:
+        return InvalidAddressException(code, message)
+    elif code == -6:
+        return InsufficientFundsException(code, message)
+    elif code == -13:
+        return WalletLockedException(code, message)
+    elif code == -28:
+        return NodeWarmingUpException(code, message)
+    else:
+        return RaptoreumRPCException(code, message)
+
+def raise_rpc_error(code, message):
+    raise get_rpc_error(code, message)
+
 class RaptoreumClient:
     def __init__(self, host="127.0.0.1", port=8766, user="", password="", use_ssl=False):
         self.host = host
@@ -82,7 +109,7 @@ class RaptoreumClient:
         resp_data = self._post(payload)
         if resp_data.get("error"):
             err = resp_data["error"]
-            raise RaptoreumRPCException(err.get("code"), err.get("message"))
+            raise_rpc_error(err.get("code"), err.get("message"))
         return resp_data.get("result")
 
     def create_batch(self):
@@ -112,7 +139,7 @@ class RaptoreumBatch:
         if not isinstance(resp_data, list):
             if isinstance(resp_data, dict) and resp_data.get("error"):
                 err = resp_data["error"]
-                raise RaptoreumRPCException(err.get("code"), err.get("message"))
+                raise_rpc_error(err.get("code"), err.get("message"))
             raise Exception("Invalid batch response from server")
             
         results = [None] * len(self.requests)
@@ -124,7 +151,7 @@ class RaptoreumBatch:
                     if 0 <= idx < len(results):
                         if resp.get("error"):
                             err = resp["error"]
-                            results[idx] = RaptoreumRPCException(err.get("code"), err.get("message"))
+                            results[idx] = get_rpc_error(err.get("code"), err.get("message"))
                         else:
                             results[idx] = resp.get("result")
                 except ValueError:

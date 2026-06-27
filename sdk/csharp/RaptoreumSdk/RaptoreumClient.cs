@@ -16,6 +16,43 @@ namespace RaptoreumSdk
         {
             Code = code;
         }
+
+        public static RaptoreumRPCException Create(int code, string message)
+        {
+            switch (code)
+            {
+                case -5:
+                    return new InvalidAddressException(code, message);
+                case -6:
+                    return new InsufficientFundsException(code, message);
+                case -13:
+                    return new WalletLockedException(code, message);
+                case -28:
+                    return new NodeWarmingUpException(code, message);
+                default:
+                    return new RaptoreumRPCException(code, message);
+            }
+        }
+    }
+
+    public class InvalidAddressException : RaptoreumRPCException
+    {
+        public InvalidAddressException(int code, string message) : base(code, message) { }
+    }
+
+    public class InsufficientFundsException : RaptoreumRPCException
+    {
+        public InsufficientFundsException(int code, string message) : base(code, message) { }
+    }
+
+    public class WalletLockedException : RaptoreumRPCException
+    {
+        public WalletLockedException(int code, string message) : base(code, message) { }
+    }
+
+    public class NodeWarmingUpException : RaptoreumRPCException
+    {
+        public NodeWarmingUpException(int code, string message) : base(code, message) { }
     }
 
     public class RaptoreumClient
@@ -97,7 +134,7 @@ namespace RaptoreumSdk
             {
                 var code = errorProp.GetProperty("code").GetInt32();
                 var message = errorProp.GetProperty("message").GetString() ?? "Unknown RPC Error";
-                throw new RaptoreumRPCException(code, message);
+                throw RaptoreumRPCException.Create(code, message);
             }
 
             return root.GetProperty("result").Clone();
@@ -156,7 +193,7 @@ namespace RaptoreumSdk
                 {
                     var code = errorProp.GetProperty("code").GetInt32();
                     var message = errorProp.GetProperty("message").GetString() ?? "Unknown RPC Error";
-                    throw new RaptoreumRPCException(code, message);
+                    throw RaptoreumRPCException.Create(code, message);
                 }
                 throw new InvalidOperationException("Invalid batch response");
             }
@@ -177,7 +214,7 @@ namespace RaptoreumSdk
                                 {
                                     var code = errorProp.GetProperty("code").GetInt32();
                                     var message = errorProp.GetProperty("message").GetString() ?? "Unknown RPC Error";
-                                    results[idx] = new RaptoreumRPCException(code, message);
+                                    results[idx] = RaptoreumRPCException.Create(code, message);
                                 }
                                 else if (resp.TryGetProperty("result", out var resultProp))
                                 {

@@ -45,6 +45,41 @@ func (e *RaptoreumRPCError) Error() string {
 	return fmt.Sprintf("RPC Error [%d]: %s", e.Code, e.Message)
 }
 
+var (
+	ErrInvalidAddress   = &RaptoreumRPCError{Code: -5, Message: "Invalid Raptoreum address"}
+	ErrInsufficientFunds = &RaptoreumRPCError{Code: -6, Message: "Insufficient funds"}
+	ErrWalletLocked     = &RaptoreumRPCError{Code: -13, Message: "Wallet unlock needed"}
+	ErrNodeWarmingUp    = &RaptoreumRPCError{Code: -28, Message: "Node is warming up"}
+)
+
+func IsInvalidAddress(err error) bool {
+	if rerr, ok := err.(*RaptoreumRPCError); ok {
+		return rerr.Code == -5
+	}
+	return false
+}
+
+func IsInsufficientFunds(err error) bool {
+	if rerr, ok := err.(*RaptoreumRPCError); ok {
+		return rerr.Code == -6
+	}
+	return false
+}
+
+func IsWalletLocked(err error) bool {
+	if rerr, ok := err.(*RaptoreumRPCError); ok {
+		return rerr.Code == -13
+	}
+	return false
+}
+
+func IsNodeWarmingUp(err error) bool {
+	if rerr, ok := err.(*RaptoreumRPCError); ok {
+		return rerr.Code == -28
+	}
+	return false
+}
+
 func NewClient(host string, port int, user string, pass string, useSsl bool) *Client {
 	// Standard transport automatically pools TCP connections (Keep-Alive)
 	transport := &http.Transport{

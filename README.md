@@ -78,8 +78,8 @@ Select your language of choice to view setup details, package configurations, an
 - [x] Implement client-side connection pooling (HTTP persistent connections) to minimize handshake latency.
 - [x] Introduce JSON-RPC array request batching and adaptive exponential backoff rate limiting.
 
-### 📍 Phase 9: Unified Exception Taxonomy (Milestone 9)
-- [ ] Replace generic exception classes with specific typed structures (e.g. `InsufficientFundsException`, `WalletLockedException`).
+### 📍 Phase 9: Unified Exception Taxonomy (Milestone 9) - **Completed**
+- [x] Replace generic exception classes with specific typed structures (e.g. `InsufficientFundsException`, `WalletLockedException`).
 
 ---
 

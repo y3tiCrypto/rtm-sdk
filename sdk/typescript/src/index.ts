@@ -17,6 +17,48 @@ export class RaptoreumRPCError extends Error {
   }
 }
 
+export class InvalidAddressError extends RaptoreumRPCError {
+  constructor(code: number, message: string) {
+    super(code, message);
+    this.name = 'InvalidAddressError';
+  }
+}
+
+export class InsufficientFundsError extends RaptoreumRPCError {
+  constructor(code: number, message: string) {
+    super(code, message);
+    this.name = 'InsufficientFundsError';
+  }
+}
+
+export class WalletLockedError extends RaptoreumRPCError {
+  constructor(code: number, message: string) {
+    super(code, message);
+    this.name = 'WalletLockedError';
+  }
+}
+
+export class NodeWarmingUpError extends RaptoreumRPCError {
+  constructor(code: number, message: string) {
+    super(code, message);
+    this.name = 'NodeWarmingUpError';
+  }
+}
+
+export function getRPCError(code: number, message: string): RaptoreumRPCError {
+  if (code === -5) {
+    return new InvalidAddressError(code, message);
+  } else if (code === -6) {
+    return new InsufficientFundsError(code, message);
+  } else if (code === -13) {
+    return new WalletLockedError(code, message);
+  } else if (code === -28) {
+    return new NodeWarmingUpError(code, message);
+  } else {
+    return new RaptoreumRPCError(code, message);
+  }
+}
+
 export class RaptoreumClient {
   private url: string;
   private user?: string;
@@ -84,7 +126,7 @@ export class RaptoreumClient {
 
     const json = await this._post(payload);
     if (json.error) {
-      throw new RaptoreumRPCError(json.error.code, json.error.message);
+      throw getRPCError(json.error.code, json.error.message);
     }
 
     return json.result as T;
@@ -504,7 +546,7 @@ export class RaptoreumBatch {
     const json = await this.client._post(this.requests);
     if (!Array.isArray(json)) {
       if (json && json.error) {
-        throw new RaptoreumRPCError(json.error.code, json.error.message);
+        throw getRPCError(json.error.code, json.error.message);
       }
       throw new Error("Invalid batch response from server");
     }
@@ -516,7 +558,7 @@ export class RaptoreumBatch {
         const idx = parseInt(id.split('-').pop() || '0', 10);
         if (idx >= 0 && idx < results.length) {
           if (resp.error) {
-            results[idx] = new RaptoreumRPCError(resp.error.code, resp.error.message);
+            results[idx] = getRPCError(resp.error.code, resp.error.message);
           } else {
             results[idx] = resp.result;
           }
