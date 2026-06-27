@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-const Version = "1.0.1"
+const Version = "1.0.2"
 
 type Client struct {
 	host       string

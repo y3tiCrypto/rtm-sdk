@@ -57,7 +57,7 @@ namespace RaptoreumSdk
 
     public class RaptoreumClient
     {
-        public const string Version = "1.0.1";
+        public const string Version = "1.0.2";
         private readonly HttpClient _httpClient;
         private readonly string _baseUrl;
         public int MaxRetries { get; set; } = 3;

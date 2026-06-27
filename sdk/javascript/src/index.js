@@ -1,4 +1,4 @@
-const SDK_VERSION = '1.0.1';
+const SDK_VERSION = '1.0.2';
 
 class RaptoreumRPCError extends Error {
   constructor(code, message) {

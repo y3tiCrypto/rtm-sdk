@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net6.0;net8.0</TargetFrameworks>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.0.1</Version>
+    <Version>1.0.2</Version>
     <Authors>Raptoreum Developers</Authors>
     <Description>Official F# SDK for Raptoreum (RTM) JSON-RPC API</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>

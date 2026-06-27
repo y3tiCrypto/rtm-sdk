@@ -8,7 +8,7 @@ To maintain uniformity across all target languages, the Raptoreum SDK monorepo m
 The central version number is declared in the root [version.json](file:///e:/RTM-Scripts/rtm-sdk/version.json):
 ```json
 {
-  "version": "1.0.1"
+  "version": "1.0.2"
 }
 ```
 
@@ -21,26 +21,26 @@ Each language SDK exports the version string as a public constant:
 ### 1. Python
 ```python
 import raptoreum
-print(raptoreum.__version__) # "1.0.1"
+print(raptoreum.__version__) # "1.0.2"
 ```
 
 ### 2. JavaScript & TypeScript
 ```typescript
 import { SDK_VERSION } from 'rtm-sdk'; // JS
 import { SDK_VERSION } from '@rtm-sdk/typescript'; // TS
-console.log(SDK_VERSION); // "1.0.1"
+console.log(SDK_VERSION); // "1.0.2"
 ```
 
 ### 3. Go
 ```go
 import "github.com/Raptor3um/rtm-sdk/go"
-fmt.Println(raptoreum.Version) // "1.0.1"
+fmt.Println(raptoreum.Version) // "1.0.2"
 ```
 
 ### 4. C# & F#
 ```csharp
 using RaptoreumSdk;
-Console.WriteLine(RaptoreumClient.Version); // "1.0.1"
+Console.WriteLine(RaptoreumClient.Version); // "1.0.2"
 ```
 
 ---
@@ -55,7 +55,7 @@ python scripts/bump_version.py <new_version>
 
 ### Example:
 ```bash
-python scripts/bump_version.py 1.0.1
+python scripts/bump_version.py 1.0.2
 ```
 
 This updates:
