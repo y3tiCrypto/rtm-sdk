@@ -62,9 +62,24 @@ Select your language of choice to view setup details, package configurations, an
 - [x] Add offline local wallet architecture (generating private keys and deriving addresses locally).
 - [x] Implement local ECDSA secp256k1 key management and signing wrappers in higher-tier languages (Python, JS, TS, Go, Rust, C#, C++).
 
-### 📍 Phase 5: Global Registry Publishing (Milestone 5)
-- [ ] Publish core packages to public registries (NPM, PyPI, Packagist, NuGet, Crates.io).
-- [ ] Establish automated GitHub Action pipelines for automated publishing.
+### 📍 Phase 5: Global Registry Publishing (Milestone 5) - **Completed**
+- [x] Publish core packages to public registries (NPM, PyPI, Packagist, NuGet, Crates.io).
+- [x] Establish automated GitHub Action pipelines for automated publishing.
+
+### 📍 Phase 6: Offline Transaction Serialization & Local UTXO Selection (Milestone 6)
+- [ ] Implement local coin selection (FIFO, Knapsack) algorithms to manage inputs/fees offline.
+- [ ] Build offline raw transaction serialization wrappers across the client packages.
+
+### 📍 Phase 7: Live Event Streaming (Milestone 7)
+- [ ] Add ZeroMQ subscription modules to capture block and transaction alerts from the local node.
+- [ ] Integrate lightweight WebSocket clients for streaming public explorer updates.
+
+### 📍 Phase 8: Connection Pooling, Request Batching & Rate Limiting (Milestone 8)
+- [ ] Implement client-side connection pooling (HTTP persistent connections) to minimize handshake latency.
+- [ ] Introduce JSON-RPC array request batching and adaptive exponential backoff rate limiting.
+
+### 📍 Phase 9: Unified Exception Taxonomy (Milestone 9)
+- [ ] Replace generic exception classes with specific typed structures (e.g. `InsufficientFundsException`, `WalletLockedException`).
 
 ---
 
