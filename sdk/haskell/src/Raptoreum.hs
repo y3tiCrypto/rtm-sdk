@@ -7,7 +7,10 @@ module Raptoreum (
     newClient,
     request,
     validateaddress,
-    sendmany
+    sendmany,
+    listassets,
+    createasset,
+    sendasset
 ) where
 
 import Data.Aeson
@@ -80,3 +83,12 @@ validateaddress client addr = request client "validateaddress" [toJSON addr]
 
 sendmany :: RaptoreumClient -> Value -> Int -> T.Text -> IO (Either String Value)
 sendmany client amounts minconf comment = request client "sendmany" [toJSON ("" :: T.Text), amounts, toJSON minconf, toJSON comment]
+
+listassets :: RaptoreumClient -> Bool -> IO (Either String Value)
+listassets client mine = request client "listassets" [toJSON mine]
+
+createasset :: RaptoreumClient -> T.Text -> Double -> Value -> IO (Either String Value)
+createasset client name amount options = request client "createasset" [toJSON name, toJSON amount, options]
+
+sendasset :: RaptoreumClient -> T.Text -> Double -> T.Text -> IO (Either String Value)
+sendasset client assetId amount address = request client "sendasset" [toJSON assetId, toJSON amount, toJSON address]

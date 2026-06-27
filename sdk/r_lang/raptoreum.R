@@ -50,6 +50,9 @@ RaptoreumClient <- function(host = "127.0.0.1", port = 8766, user = "", password
     getblockcount = function() request("getblockcount"),
     getbalance = function() request("getbalance"),
     validateaddress = function(address) request("validateaddress", list(address)),
-    sendmany = function(amounts_list, minconf = 1, comment = "") request("sendmany", list("", amounts_list, minconf, comment))
+    sendmany = function(amounts_list, minconf = 1, comment = "") request("sendmany", list("", amounts_list, minconf, comment)),
+    listassets = function(mine = FALSE) request("listassets", list(mine)),
+    createasset = function(name, amount, options = list()) request("createasset", list(name, amount, options)),
+    sendasset = function(asset_id, amount, address) request("sendasset", list(asset_id, amount, address))
   )
 }

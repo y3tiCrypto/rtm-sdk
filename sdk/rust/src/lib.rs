@@ -115,4 +115,18 @@ impl RaptoreumClient {
         ])?;
         Ok(val.as_str().ok_or("Invalid response type")?.to_string())
     }
+
+    pub fn listassets(&self, mine: bool) -> Result<Value, Box<dyn std::error::Error>> {
+        self.request("listassets", vec![Value::from(mine)])
+    }
+
+    pub fn createasset(&self, name: &str, amount: f64, options: Value) -> Result<Value, Box<dyn std::error::Error>> {
+        let opts = if options.is_null() { Value::Object(serde_json::Map::new()) } else { options };
+        self.request("createasset", vec![Value::from(name), Value::from(amount), opts])
+    }
+
+    pub fn sendasset(&self, asset_id: &str, amount: f64, address: &str) -> Result<String, Box<dyn std::error::Error>> {
+        let val = self.request("sendasset", vec![Value::from(asset_id), Value::from(amount), Value::from(address)])?;
+        Ok(val.as_str().ok_or("Invalid response type")?.to_string())
+    }
 }

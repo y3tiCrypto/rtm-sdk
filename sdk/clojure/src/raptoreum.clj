@@ -52,3 +52,12 @@
 
 (defn send-many [client amounts & [minconf comment]]
   (request client "sendmany" ["" amounts (or minconf 1) (or comment "")]))
+
+(defn list-assets [client & [mine]]
+  (request client "listassets" [(or mine false)]))
+
+(defn create-asset [client name amount & [options]]
+  (request client "createasset" [name amount (or options {})]))
+
+(defn send-asset [client asset-id amount address]
+  (request client "sendasset" [asset-id amount address]))

@@ -81,4 +81,8 @@ class RaptoreumClient(
     fun validateAddress(address: String): JsonElement = request("validateaddress", address)
     fun sendMany(amounts: Map<String, Double>, minconf: Int = 1, comment: String = ""): String =
         request("sendmany", "", amounts, minconf, comment).asString
+
+    fun listAssets(mine: Boolean = false): JsonElement = request("listassets", mine)
+    fun createAsset(name: String, amount: Double, options: Map<String, Any> = mapOf()): JsonElement = request("createasset", name, amount, options)
+    fun sendAsset(assetId: String, amount: Double, address: String): String = request("sendasset", assetId, amount, address).asString
 }

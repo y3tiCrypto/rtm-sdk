@@ -103,4 +103,16 @@ public class RaptoreumClient {
     public String sendMany(java.util.Map<String, Double> amounts, int minconf, String comment) throws Exception {
         return request("sendmany", "", amounts, minconf, comment).getAsString();
     }
+
+    public JsonElement listAssets(boolean mine) throws Exception {
+        return request("listassets", mine);
+    }
+
+    public JsonElement createAsset(String name, double amount, java.util.Map<String, Object> options) throws Exception {
+        return request("createasset", name, amount, options != null ? options : new java.util.HashMap<>());
+    }
+
+    public String sendAsset(String assetId, double amount, String address) throws Exception {
+        return request("sendasset", assetId, amount, address).getAsString();
+    }
 }

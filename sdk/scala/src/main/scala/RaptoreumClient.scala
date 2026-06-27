@@ -28,7 +28,10 @@ class RaptoreumClient(
     def request(method: String, params: Any*): String = {
         val paramsJson = params.map {
             case s: String => s""""$s""""
-            case m: Map[_, _] => m.map { case (k, v) => s""""$k":$v""" }.mkString("{", ",", "}")
+            case m: Map[_, _] => m.map {
+                case (k, v: String) => s""""$k":"$v""""
+                case (k, v) => s""""$k":$v"""
+            }.mkString("{", ",", "}")
             case other => other.toString
         }.mkString("[", ",", "]")
 
@@ -81,4 +84,7 @@ class RaptoreumClient(
     def sendmany(amounts: Map[String, Double], minconf: Int = 1, comment: String = ""): String = {
         request("sendmany", "", amounts, minconf, comment)
     }
+    def listassets(mine: Boolean = false): String = request("listassets", mine)
+    def createasset(name: String, amount: Double, options: Map[String, Any] = Map()): String = request("createasset", name, amount, options)
+    def sendasset(assetId: String, amount: Double, address: String): String = request("sendasset", assetId, amount, address)
 }

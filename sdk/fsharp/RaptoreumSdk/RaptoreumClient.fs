@@ -55,3 +55,6 @@ type RaptoreumClient(host: string, port: int, user: string, password: string, us
     member this.ValidateAddressAsync(address: string) = this.RequestAsync("validateaddress", [| address |])
     member this.SendManyAsync(amounts: System.Collections.Generic.IDictionary<string, double>, minconf: int, comment: string) = 
         this.RequestAsync("sendmany", [| "" :> obj; amounts :> obj; minconf :> obj; comment :> obj |])
+    member this.ListAssetsAsync(mine: bool) = this.RequestAsync("listassets", [| mine :> obj |])
+    member this.CreateAssetAsync(name: string, amount: double, options: obj) = this.RequestAsync("createasset", [| name :> obj; amount :> obj; options |])
+    member this.SendAssetAsync(assetId: string, amount: double, address: string) = this.RequestAsync("sendasset", [| assetId :> obj; amount :> obj; address :> obj |])

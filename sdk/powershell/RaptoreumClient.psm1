@@ -85,6 +85,29 @@ function New-RaptoreumClient {
         return $this.Request("sendmany", @("", $Amounts, $MinConf, $Comment))
     }
 
+    $clientObj | Add-Member -MemberType ScriptMethod -Name "ListAssets" -Value {
+        param([bool]$Mine = $false)
+        return $this.Request("listassets", @($Mine))
+    }
+
+    $clientObj | Add-Member -MemberType ScriptMethod -Name "CreateAsset" -Value {
+        param(
+            [string]$Name,
+            [double]$Amount,
+            [hashtable]$Options = @{}
+        )
+        return $this.Request("createasset", @($Name, $Amount, $Options))
+    }
+
+    $clientObj | Add-Member -MemberType ScriptMethod -Name "SendAsset" -Value {
+        param(
+            [string]$AssetId,
+            [double]$Amount,
+            [string]$Address
+        )
+        return $this.Request("sendasset", @($AssetId, $Amount, $Address))
+    }
+
     return $clientObj
 }
 

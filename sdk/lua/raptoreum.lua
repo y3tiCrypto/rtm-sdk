@@ -78,6 +78,31 @@ function raptoreum.new(host, port, user, password, use_ssl)
         return self:request("sendmany", params)
     end
 
+    function self:listassets(mine)
+        mine = mine or false
+        return self:request("listassets", string.format('[%s]', tostring(mine)))
+    end
+
+    function self:createasset(name, amount, options_table)
+        options_table = options_table or {}
+        local kv = {}
+        for k, v in pairs(options_table) do
+            if type(v) == "string" then
+                table.insert(kv, string.format('"%s":"%s"', escape_str(k), escape_str(v)))
+            else
+                table.insert(kv, string.format('"%s":%s', escape_str(k), tostring(v)))
+            end
+        end
+        local options_json = "{" .. table.concat(kv, ",") .. "}"
+        local params = string.format('["%s",%s,%s]', escape_str(name), tostring(amount), options_json)
+        return self:request("createasset", params)
+    end
+
+    function self:sendasset(asset_id, amount, address)
+        local params = string.format('["%s",%s,"%s"]', escape_str(asset_id), tostring(amount), escape_str(address))
+        return self:request("sendasset", params)
+    end
+
     return self
 end
 

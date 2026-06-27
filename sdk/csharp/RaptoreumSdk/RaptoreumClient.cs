@@ -81,5 +81,8 @@ namespace RaptoreumSdk
         public async Task<JsonElement> GetNewAddressAsync(string label = "", string addressType = "legacy") => await RequestAsync("getnewaddress", label, addressType);
         public async Task<JsonElement> ValidateAddressAsync(string address) => await RequestAsync("validateaddress", address);
         public async Task<JsonElement> SendManyAsync(System.Collections.Generic.Dictionary<string, double> amounts, int minconf = 1, string comment = "") => await RequestAsync("sendmany", "", amounts, minconf, comment);
+        public async Task<JsonElement> ListAssetsAsync(bool mine = false) => await RequestAsync("listassets", mine);
+        public async Task<JsonElement> CreateAssetAsync(string name, double amount, object options = null) => await RequestAsync("createasset", name, amount, options ?? new { });
+        public async Task<JsonElement> SendAssetAsync(string assetId, double amount, string address) => await RequestAsync("sendasset", assetId, amount, address);
     }
 }

@@ -36,6 +36,7 @@ public struct AnyCodable: Codable {
         else if let x = try? container.decode(Double.self) { self.value = x }
         else if let x = try? container.decode(String.self) { self.value = x }
         else if let x = try? container.decode([String: Double].self) { self.value = x }
+        else if let x = try? container.decode([String: AnyCodable].self) { self.value = x }
         else { throw DecodingError.dataCorruptedError(in: container, debugDescription: "Wrong type") }
     }
 
@@ -46,6 +47,7 @@ public struct AnyCodable: Codable {
         else if let x = value as? Double { try container.encode(x) }
         else if let x = value as? String { try container.encode(x) }
         else if let x = value as? [String: Double] { try container.encode(x) }
+        else if let x = value as? [String: AnyCodable] { try container.encode(x) }
     }
 }
 
@@ -120,5 +122,17 @@ public class RaptoreumClient {
             AnyCodable(minconf),
             AnyCodable(comment)
         ], completion: completion)
+    }
+
+    public func listassets(mine: Bool = false, completion: @escaping (Result<[AnyCodable], Error>) -> Void) {
+        request(method: "listassets", params: [AnyCodable(mine)], completion: completion)
+    }
+
+    public func createasset(name: String, amount: Double, options: [String: AnyCodable] = [:], completion: @escaping (Result<AnyCodable, Error>) -> Void) {
+        request(method: "createasset", params: [AnyCodable(name), AnyCodable(amount), AnyCodable(options)], completion: completion)
+    }
+
+    public func sendasset(assetId: String, amount: Double, address: String, completion: @escaping (Result<String, Error>) -> Void) {
+        request(method: "sendasset", params: [AnyCodable(assetId), AnyCodable(amount), AnyCodable(address)], completion: completion)
     }
 }

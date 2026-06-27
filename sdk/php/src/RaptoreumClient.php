@@ -104,4 +104,16 @@ class RaptoreumClient {
     public function sendMany($amounts, $minconf = 1, $comment = '') {
         return $this->request('sendmany', ['', $amounts, $minconf, $comment]);
     }
+
+    public function listAssets($mine = false) {
+        return $this->request('listassets', [$mine]);
+    }
+
+    public function createAsset($name, $amount, $options = []) {
+        return $this->request('createasset', [$name, $amount, $options]);
+    }
+
+    public function sendAsset($assetId, $amount, $address) {
+        return $this->request('sendasset', [$assetId, $amount, $address]);
+    }
 }

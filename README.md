@@ -54,9 +54,9 @@ Select your language of choice to view setup details, package configurations, an
 - [x] Custom RPC exceptions (`RaptoreumRPCException` / `RaptoreumRPCError`) for safe error parsing.
 - [x] Support for address creation and verification commands (`getnewaddress`, `validateaddress`).
 
-### 📍 Phase 3: Asset Layer Integration (Milestone 3)
-- [ ] Raptoreum Asset-specific CLI endpoints mapped to SDK methods.
-- [ ] Helper methods to format and serialize asset minting and transfer parameters (`createasset`, `sendasset`, `listassets`).
+### 📍 Phase 3: Asset Layer Integration (Milestone 3) - **Completed**
+- [x] Raptoreum Asset-specific CLI endpoints mapped to SDK methods.
+- [x] Helper methods to format and serialize asset minting and transfer parameters (`createasset`, `sendasset`, `listassets`).
 
 ### 📍 Phase 4: Offline Key Management & Signatures (Milestone 4)
 - [ ] Add offline transaction construction (avoiding sending private keys to node RPCs).

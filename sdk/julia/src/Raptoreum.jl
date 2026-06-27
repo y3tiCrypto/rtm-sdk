@@ -4,7 +4,7 @@ using HTTP
 using JSON3
 using Base64
 
-export RaptoreumClient, RaptoreumRPCException, request, getblockchaininfo, getblockcount, getbalance, validateaddress, sendmany
+export RaptoreumClient, RaptoreumRPCException, request, getblockchaininfo, getblockcount, getbalance, validateaddress, sendmany, listassets, createasset, sendasset
 
 struct RaptoreumRPCException <: Exception
     code::Int
@@ -63,5 +63,8 @@ getblockcount(client::RaptoreumClient) = request(client, "getblockcount")
 getbalance(client::RaptoreumClient) = request(client, "getbalance")
 validateaddress(client::RaptoreumClient, address::String) = request(client, "validateaddress", [address])
 sendmany(client::RaptoreumClient, amounts::Dict{String, Float64}, minconf::Int=1, comment::String="") = request(client, "sendmany", ["", amounts, minconf, comment])
+listassets(client::RaptoreumClient, mine::Bool=false) = request(client, "listassets", [mine])
+createasset(client::RaptoreumClient, name::String, amount::Float64, options::Dict=Dict()) = request(client, "createasset", [name, amount, options])
+sendasset(client::RaptoreumClient, asset_id::String, amount::Float64, address::String) = request(client, "sendasset", [asset_id, amount, address])
 
 end # module

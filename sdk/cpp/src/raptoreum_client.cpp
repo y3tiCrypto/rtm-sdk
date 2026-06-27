@@ -152,4 +152,22 @@ std::string RaptoreumClient::sendmany(const std::string& amounts_json, int minco
     return request("sendmany", ss.str());
 }
 
+std::string RaptoreumClient::listassets(bool mine) {
+    std::stringstream ss;
+    ss << "[" << (mine ? "true" : "false") << "]";
+    return request("listassets", ss.str());
+}
+
+std::string RaptoreumClient::createasset(const std::string& name, double amount, const std::string& options_json) {
+    std::stringstream ss;
+    ss << "[\"" << name << "\"," << amount << "," << options_json << "]";
+    return request("createasset", ss.str());
+}
+
+std::string RaptoreumClient::sendasset(const std::string& asset_id, double amount, const std::string& address) {
+    std::stringstream ss;
+    ss << "[\"" << asset_id << "\"," << amount << ",\"" << address << "\"]";
+    return request("sendasset", ss.str());
+}
+
 } // namespace raptoreum

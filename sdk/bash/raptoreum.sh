@@ -69,3 +69,22 @@ rtm_sendmany() {
   local comment="${3:-""}"
   rtm_request "sendmany" "[\"\", ${amounts}, ${minconf}, \"${comment}\"]"
 }
+
+rtm_listassets() {
+  local mine="${1:-false}"
+  rtm_request "listassets" "[${mine}]"
+}
+
+rtm_createasset() {
+  local name="$1"
+  local amount="$2"
+  local options="${3:-{}}"
+  rtm_request "createasset" "[\"${name}\", ${amount}, ${options}]"
+}
+
+rtm_sendasset() {
+  local asset_id="$1"
+  local amount="$2"
+  local address="$3"
+  rtm_request "sendasset" "[\"${asset_id}\", ${amount}, \"${address}\"]"
+}

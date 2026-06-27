@@ -168,3 +168,24 @@ func (c *Client) SendMany(amounts map[string]float64, minconf int, comment strin
 	err = json.Unmarshal(resp, &txid)
 	return txid, err
 }
+
+func (c *Client) ListAssets(mine bool) (json.RawMessage, error) {
+	return c.Call("listassets", mine)
+}
+
+func (c *Client) CreateAsset(name string, amount float64, options map[string]interface{}) (json.RawMessage, error) {
+	if options == nil {
+		options = make(map[string]interface{})
+	}
+	return c.Call("createasset", name, amount, options)
+}
+
+func (c *Client) SendAsset(assetId string, amount float64, address string) (string, error) {
+	resp, err := c.Call("sendasset", assetId, amount, address)
+	if err != nil {
+		return "", err
+	}
+	var txid string
+	err = json.Unmarshal(resp, &txid)
+	return txid, err
+}

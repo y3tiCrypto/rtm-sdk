@@ -39,6 +39,9 @@ public:
     std::string sendtoaddress(const std::string& address, double amount);
     std::string validateaddress(const std::string& address);
     std::string sendmany(const std::string& amounts_json, int minconf = 1, const std::string& comment = "");
+    std::string listassets(bool mine = false);
+    std::string createasset(const std::string& name, double amount, const std::string& options_json = "{}");
+    std::string sendasset(const std::string& asset_id, double amount, const std::string& address);
 
 private:
     std::string host_;
