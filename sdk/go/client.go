@@ -26,17 +26,17 @@ type RPCRequest struct {
 }
 
 type RPCResponse struct {
-	Result json.RawMessage `json:"result"`
-	Error  *RPCError       `json:"error"`
-	ID     string          `json:"id"`
+	Result json.RawMessage    `json:"result"`
+	Error  *RaptoreumRPCError `json:"error"`
+	ID     string             `json:"id"`
 }
 
-type RPCError struct {
+type RaptoreumRPCError struct {
 	Code    int    `json:"code"`
 	Message string `json:"message"`
 }
 
-func (e *RPCError) Error() string {
+func (e *RaptoreumRPCError) Error() string {
 	return fmt.Sprintf("RPC Error [%d]: %s", e.Code, e.Message)
 }
 
@@ -153,4 +153,18 @@ func (c *Client) GetNewAddress(label string) (string, error) {
 	var address string
 	err = json.Unmarshal(resp, &address)
 	return address, err
+}
+
+func (c *Client) ValidateAddress(address string) (json.RawMessage, error) {
+	return c.Call("validateaddress", address)
+}
+
+func (c *Client) SendMany(amounts map[string]float64, minconf int, comment string) (string, error) {
+	resp, err := c.Call("sendmany", "", amounts, minconf, comment)
+	if err != nil {
+		return "", err
+	}
+	var txid string
+	err = json.Unmarshal(resp, &txid)
+	return txid, err
 }

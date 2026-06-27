@@ -32,7 +32,10 @@
     (if (and (not= status 200) (not= status 500))
       (throw (Exception. (str "HTTP Error: Status " status)))
       (if-let [err (:error body)]
-        (throw (Exception. (str "RPC Error [" (:code err) "]: " (:message err))))
+        (throw (ex-info (str "RPC Error [" (:code err) "]: " (:message err))
+                        {:type :raptoreum/rpc-error
+                         :code (:code err)
+                         :message (:message err)}))
         (:result body)))))
 
 (defn get-blockchain-info [client]
@@ -43,3 +46,9 @@
 
 (defn get-balance [client]
   (request client "getbalance"))
+
+(defn validate-address [client address]
+  (request client "validateaddress" [address]))
+
+(defn send-many [client amounts & [minconf comment]]
+  (request client "sendmany" ["" amounts (or minconf 1) (or comment "")]))

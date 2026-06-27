@@ -1,6 +1,17 @@
 <?php
 namespace Raptoreum;
 
+class RaptoreumRPCException extends \Exception {
+    private $rpcCode;
+    public function __construct($message, $code = 0, \Throwable $previous = null) {
+        parent::__construct($message, 0, $previous);
+        $this->rpcCode = $code;
+    }
+    public function getRpcCode() {
+        return $this->rpcCode;
+    }
+}
+
 class RaptoreumClient {
     private $host;
     private $port;
@@ -66,7 +77,7 @@ class RaptoreumClient {
         }
 
         if (isset($json['error']) && $json['error'] !== null) {
-            throw new \Exception("RPC Error [" . $json['error']['code'] . "]: " . $json['error']['message']);
+            throw new RaptoreumRPCException($json['error']['message'], $json['error']['code']);
         }
 
         return $json['result'];
@@ -84,5 +95,13 @@ class RaptoreumClient {
     public function getNewAddress($label = '', $addressType = 'legacy') { return $this->request('getnewaddress', [$label, $addressType]); }
     public function sendToAddress($address, $amount, $comment = '', $commentTo = '', $subtractFee = false) {
         return $this->request('sendtoaddress', [$address, $amount, $comment, $commentTo, $subtractFee]);
+    }
+
+    public function validateAddress($address) {
+        return $this->request('validateaddress', [$address]);
+    }
+
+    public function sendMany($amounts, $minconf = 1, $comment = '') {
+        return $this->request('sendmany', ['', $amounts, $minconf, $comment]);
     }
 }

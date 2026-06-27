@@ -75,6 +75,28 @@ std::string RaptoreumClient::request(const std::string& method, const std::strin
         throw std::runtime_error(err.str());
     }
 
+    size_t error_pos = readBuffer.find("\"error\":");
+    if (error_pos != std::string::npos) {
+        size_t null_pos = readBuffer.find("null", error_pos);
+        if (null_pos == std::string::npos || null_pos - error_pos > 12) {
+            int code = -1;
+            std::string msg = "Unknown RPC Error";
+            size_t code_pos = readBuffer.find("\"code\":");
+            if (code_pos != std::string::npos) {
+                code = std::stoi(readBuffer.substr(code_pos + 7));
+            }
+            size_t msg_pos = readBuffer.find("\"message\":");
+            if (msg_pos != std::string::npos) {
+                size_t start_quote = readBuffer.find("\"", msg_pos + 10);
+                size_t end_quote = readBuffer.find("\"", start_quote + 1);
+                if (start_quote != std::string::npos && end_quote != std::string::npos) {
+                    msg = readBuffer.substr(start_quote + 1, end_quote - start_quote - 1);
+                }
+            }
+            throw RaptoreumRPCException(code, msg);
+        }
+    }
+
     return readBuffer;
 }
 
@@ -116,6 +138,18 @@ std::string RaptoreumClient::sendtoaddress(const std::string& address, double am
     std::stringstream ss;
     ss << "[\"" << address << "\"," << amount << "]";
     return request("sendtoaddress", ss.str());
+}
+
+std::string RaptoreumClient::validateaddress(const std::string& address) {
+    std::stringstream ss;
+    ss << "[\"" << address << "\"]";
+    return request("validateaddress", ss.str());
+}
+
+std::string RaptoreumClient::sendmany(const std::string& amounts_json, int minconf, const std::string& comment) {
+    std::stringstream ss;
+    ss << "[\"\", " << amounts_json << ", " << minconf << ", \"" << comment << "\"]";
+    return request("sendmany", ss.str());
 }
 
 } // namespace raptoreum

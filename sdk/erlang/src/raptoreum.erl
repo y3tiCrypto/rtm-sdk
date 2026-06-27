@@ -1,5 +1,5 @@
 -module(raptoreum).
--export([new/5, request/3, get_blockchain_info/1, get_block_count/1, get_balance/1]).
+-export([new/5, request/3, get_blockchain_info/1, get_block_count/1, get_balance/1, validate_address/2, send_many/4]).
 
 new(Host, Port, User, Pass, UseSsl) ->
     Scheme = case UseSsl of
@@ -24,12 +24,25 @@ request({Url, AuthHeaders}, Method, ParamsListJson) ->
     ssl:start(),
     
     case httpc:request(post, {Url, Headers, "application/json", Payload}, [], []) of
-        {ok, {{_, 200, _}, _, Body}} -> {ok, Body};
-        {ok, {{_, 500, _}, _, Body}} -> {ok, Body};
+        {ok, {{_, 200, _}, _, Body}} -> check_rpc_error(Body);
+        {ok, {{_, 500, _}, _, Body}} -> check_rpc_error(Body);
         {ok, {{_, Status, _}, _, _}} -> {error, {http_status, Status}};
         {error, Reason} -> {error, Reason}
+    end.
+
+check_rpc_error(Body) ->
+    case string:str(Body, "\"error\":") of
+        0 -> {ok, Body};
+        _ ->
+            case (string:str(Body, "\"error\":null") =:= 0) andalso (string:str(Body, "\"error\": null") =:= 0) of
+                true -> {error, {rpc_error, Body}};
+                false -> {ok, Body}
+            end
     end.
 
 get_blockchain_info(Client) -> request(Client, "getblockchaininfo", "[]").
 get_block_count(Client) -> request(Client, "getblockcount", "[]").
 get_balance(Client) -> request(Client, "getbalance", "[]").
+validate_address(Client, Address) -> request(Client, "validateaddress", "[\"" ++ Address ++ "\"]").
+send_many(Client, AmountsJson, MinConf, Comment) ->
+    request(Client, "sendmany", "[\"\", " ++ AmountsJson ++ ", " ++ integer_to_list(MinConf) ++ ", \"" ++ Comment ++ "\"]").

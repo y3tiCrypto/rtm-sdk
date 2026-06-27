@@ -3,6 +3,12 @@ import urllib.request
 import urllib.error
 import base64
 
+class RaptoreumRPCException(Exception):
+    def __init__(self, code, message):
+        self.code = code
+        self.message = message
+        super().__init__(f"RPC Error [{code}]: {message}")
+
 class RaptoreumClient:
     def __init__(self, host="127.0.0.1", port=8766, user="", password="", use_ssl=False):
         self.host = host
@@ -37,7 +43,7 @@ class RaptoreumClient:
                 resp_data = json.loads(response.read().decode("utf-8"))
                 if resp_data.get("error"):
                     err = resp_data["error"]
-                    raise Exception(f"RPC Error [{err.get('code')}]: {err.get('message')}")
+                    raise RaptoreumRPCException(err.get("code"), err.get("message"))
                 return resp_data.get("result")
         except urllib.error.HTTPError as e:
             # RPC node often returns 500 on execution error with details in JSON
@@ -45,7 +51,7 @@ class RaptoreumClient:
                 resp_data = json.loads(e.read().decode("utf-8"))
                 if resp_data.get("error"):
                     err = resp_data["error"]
-                    raise Exception(f"RPC Error [{err.get('code')}]: {err.get('message')}")
+                    raise RaptoreumRPCException(err.get("code"), err.get("message"))
             except Exception:
                 pass
             raise Exception(f"HTTP Error {e.code}: {e.reason}")
@@ -77,6 +83,14 @@ class RaptoreumClient:
 
     def sendtoaddress(self, address, amount, comment="", comment_to="", subtract_fee=False):
         return self.request("sendtoaddress", [address, amount, comment, comment_to, subtract_fee])
+
+    def validateaddress(self, address):
+        return self.request("validateaddress", [address])
+
+    def sendmany(self, amounts, minconf=1, comment="", subtract_fee_from=None):
+        if subtract_fee_from is None:
+            subtract_fee_from = []
+        return self.request("sendmany", ["", amounts, minconf, comment, subtract_fee_from])
 
     # Asset API
     def listassets(self, mine=False):

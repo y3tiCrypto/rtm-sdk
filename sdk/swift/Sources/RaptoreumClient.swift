@@ -13,11 +13,11 @@ public struct RPCRequest: Codable {
 
 public struct RPCResponse<T: Codable>: Codable {
     public let result: T?
-    public let error: RPCError?
+    public let error: RaptoreumRPCError?
     public let id: String
 }
 
-public struct RPCError: Codable, Error {
+public struct RaptoreumRPCError: Codable, Error {
     public let code: Int
     public let message: String
 }
@@ -35,6 +35,7 @@ public struct AnyCodable: Codable {
         else if let x = try? container.decode(Int.self) { self.value = x }
         else if let x = try? container.decode(Double.self) { self.value = x }
         else if let x = try? container.decode(String.self) { self.value = x }
+        else if let x = try? container.decode([String: Double].self) { self.value = x }
         else { throw DecodingError.dataCorruptedError(in: container, debugDescription: "Wrong type") }
     }
 
@@ -44,6 +45,7 @@ public struct AnyCodable: Codable {
         else if let x = value as? Int { try container.encode(x) }
         else if let x = value as? Double { try container.encode(x) }
         else if let x = value as? String { try container.encode(x) }
+        else if let x = value as? [String: Double] { try container.encode(x) }
     }
 }
 
@@ -105,5 +107,18 @@ public class RaptoreumClient {
             }
         }
         task.resume()
+    }
+
+    public func validateaddress(address: String, completion: @escaping (Result<AnyCodable, Error>) -> Void) {
+        request(method: "validateaddress", params: [AnyCodable(address)], completion: completion)
+    }
+
+    public func sendmany(amounts: [String: Double], minconf: Int = 1, comment: String = "", completion: @escaping (Result<String, Error>) -> Void) {
+        request(method: "sendmany", params: [
+            AnyCodable(""),
+            AnyCodable(amounts),
+            AnyCodable(minconf),
+            AnyCodable(comment)
+        ], completion: completion)
     }
 }

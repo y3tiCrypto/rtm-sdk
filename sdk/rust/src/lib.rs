@@ -19,22 +19,22 @@ struct RPCRequest<'a> {
 #[derive(Deserialize)]
 struct RPCResponse {
     result: Option<Value>,
-    error: Option<RPCError>,
+    error: Option<RaptoreumRPCError>,
 }
 
 #[derive(Deserialize, Debug)]
-pub struct RPCError {
+pub struct RaptoreumRPCError {
     pub code: i32,
     pub message: String,
 }
 
-impl std::fmt::Display for RPCError {
+impl std::fmt::Display for RaptoreumRPCError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "RPC Error [{}]: {}", self.code, self.message)
     }
 }
 
-impl std::error::Error for RPCError {}
+impl std::error::Error for RaptoreumRPCError {}
 
 impl RaptoreumClient {
     pub fn new(host: &str, port: u16, user: Option<String>, password: Option<String>, use_ssl: bool) -> Self {
@@ -99,5 +99,20 @@ impl RaptoreumClient {
     pub fn getbalance(&self) -> Result<f64, Box<dyn std::error::Error>> {
         let val = self.request("getbalance", vec![])?;
         Ok(val.as_f64().ok_or("Invalid response type")?)
+    }
+
+    pub fn validateaddress(&self, address: &str) -> Result<Value, Box<dyn std::error::Error>> {
+        self.request("validateaddress", vec![Value::from(address)])
+    }
+
+    pub fn sendmany(&self, amounts: std::collections::HashMap<String, f64>, minconf: i32, comment: &str) -> Result<String, Box<dyn std::error::Error>> {
+        let amounts_val = serde_json::to_value(amounts)?;
+        let val = self.request("sendmany", vec![
+            Value::from(""),
+            amounts_val,
+            Value::from(minconf),
+            Value::from(comment)
+        ])?;
+        Ok(val.as_str().ok_or("Invalid response type")?.to_string())
     }
 }

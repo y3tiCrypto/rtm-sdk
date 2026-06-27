@@ -34,7 +34,11 @@ RaptoreumClient <- function(host = "127.0.0.1", port = 8766, user = "", password
     parsed <- fromJSON(content_raw)
     
     if (!is.null(parsed$error)) {
-      stop(paste("RPC Error [", parsed$error$code, "]:", parsed$error$message))
+      err <- simpleError(paste("RPC Error [", parsed$error$code, "]:", parsed$error$message))
+      err$code <- parsed$error$code
+      err$rpc_message <- parsed$error$message
+      class(err) <- c("RaptoreumRPCError", class(err))
+      stop(err)
     }
     
     return(parsed$result)
@@ -44,6 +48,8 @@ RaptoreumClient <- function(host = "127.0.0.1", port = 8766, user = "", password
     request = request,
     getblockchaininfo = function() request("getblockchaininfo"),
     getblockcount = function() request("getblockcount"),
-    getbalance = function() request("getbalance")
+    getbalance = function() request("getbalance"),
+    validateaddress = function(address) request("validateaddress", list(address)),
+    sendmany = function(amounts_list, minconf = 1, comment = "") request("sendmany", list("", amounts_list, minconf, comment))
   )
 }

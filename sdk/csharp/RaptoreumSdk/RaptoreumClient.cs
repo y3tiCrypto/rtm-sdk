@@ -7,6 +7,15 @@ using System.Threading.Tasks;
 
 namespace RaptoreumSdk
 {
+    public class RaptoreumRPCException : Exception
+    {
+        public int Code { get; }
+        public RaptoreumRPCException(int code, string message) : base($"RPC Error [{code}]: {message}")
+        {
+            Code = code;
+        }
+    }
+
     public class RaptoreumClient
     {
         private readonly HttpClient _httpClient;
@@ -54,8 +63,8 @@ namespace RaptoreumSdk
             if (root.TryGetProperty("error", out var errorProp) && errorProp.ValueKind != JsonValueKind.Null)
             {
                 var code = errorProp.GetProperty("code").GetInt32();
-                var message = errorProp.GetProperty("message").GetString();
-                throw new Exception($"RPC Error [{code}]: {message}");
+                var message = errorProp.GetProperty("message").GetString() ?? "Unknown RPC Error";
+                throw new RaptoreumRPCException(code, message);
             }
 
             return root.GetProperty("result").Clone();
@@ -70,5 +79,7 @@ namespace RaptoreumSdk
         // Wallet API
         public async Task<JsonElement> GetBalanceAsync() => await RequestAsync("getbalance");
         public async Task<JsonElement> GetNewAddressAsync(string label = "", string addressType = "legacy") => await RequestAsync("getnewaddress", label, addressType);
+        public async Task<JsonElement> ValidateAddressAsync(string address) => await RequestAsync("validateaddress", address);
+        public async Task<JsonElement> SendManyAsync(System.Collections.Generic.Dictionary<string, double> amounts, int minconf = 1, string comment = "") => await RequestAsync("sendmany", "", amounts, minconf, comment);
     }
 }

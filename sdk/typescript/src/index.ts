@@ -6,6 +6,15 @@ export interface ClientOptions {
   useSsl?: boolean;
 }
 
+export class RaptoreumRPCError extends Error {
+  public code: number;
+  constructor(code: number, message: string) {
+    super(`RPC Error [${code}]: ${message}`);
+    this.code = code;
+    this.name = 'RaptoreumRPCError';
+  }
+}
+
 export class RaptoreumClient {
   private url: string;
   private user?: string;
@@ -49,7 +58,7 @@ export class RaptoreumClient {
 
     const json = await response.json();
     if (json.error) {
-      throw new Error(`RPC Error [${json.error.code}]: ${json.error.message}`);
+      throw new RaptoreumRPCError(json.error.code, json.error.message);
     }
 
     return json.result as T;
@@ -69,6 +78,14 @@ export class RaptoreumClient {
   }
   sendToAddress(address: string, amount: number, comment: string = '', commentTo: string = '', subtractFee: boolean = false): Promise<string> {
     return this.request<string>('sendtoaddress', [address, amount, comment, commentTo, subtractFee]);
+  }
+
+  validateAddress(address: string): Promise<any> {
+    return this.request<any>('validateaddress', [address]);
+  }
+
+  sendMany(amounts: Record<string, number>, minConf: number = 1, comment: string = '', subtractFeeFrom: string[] = []): Promise<string> {
+    return this.request<string>('sendmany', ['', amounts, minConf, comment, subtractFeeFrom]);
   }
 
   // Asset API

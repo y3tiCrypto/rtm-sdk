@@ -1,3 +1,11 @@
+class RaptoreumRPCError extends Error {
+  constructor(code, message) {
+    super(`RPC Error [${code}]: ${message}`);
+    this.code = code;
+    this.name = 'RaptoreumRPCError';
+  }
+}
+
 class RaptoreumClient {
   constructor({ host = '127.0.0.1', port = 8766, user = '', password = '', useSsl = false } = {}) {
     this.host = host;
@@ -38,7 +46,7 @@ class RaptoreumClient {
 
     const json = await response.json();
     if (json.error) {
-      throw new Error(`RPC Error [${json.error.code}]: ${json.error.message}`);
+      throw new RaptoreumRPCError(json.error.code, json.error.message);
     }
 
     return json.result;
@@ -58,6 +66,14 @@ class RaptoreumClient {
     return this.request('sendtoaddress', [address, amount, comment, commentTo, subtractFee]);
   }
 
+  validateAddress(address) {
+    return this.request('validateaddress', [address]);
+  }
+
+  sendMany(amounts, minConf = 1, comment = '', subtractFeeFrom = []) {
+    return this.request('sendmany', ['', amounts, minConf, comment, subtractFeeFrom]);
+  }
+
   // Asset API
   listAssets(mine = false) { return this.request('listassets', [mine]); }
   createAsset(name, amount, options = {}) { return this.request('createasset', [name, amount, options]); }
@@ -68,4 +84,4 @@ class RaptoreumClient {
   smartnodeStatus() { return this.request('smartnode', ['status']); }
 }
 
-module.exports = { RaptoreumClient };
+module.exports = { RaptoreumClient, RaptoreumRPCError };

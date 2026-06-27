@@ -11,6 +11,8 @@ import java.nio.charset.StandardCharsets
 import java.time.Duration
 import java.util.Base64
 
+class RaptoreumRPCException(val code: Int, message: String) : RuntimeException("RPC Error [$code]: $message")
+
 class RaptoreumClient(
     host: String = "127.0.0.1",
     port: Int = 8766,
@@ -63,7 +65,7 @@ class RaptoreumClient(
         val responseJson = gson.fromJson(response.body(), JsonObject::class.java)
         if (responseJson.has("error") && !responseJson.get("error").isJsonNull) {
             val err = responseJson.getAsJsonObject("error")
-            throw RuntimeException("RPC Error [${err.get("code").asInt}]: ${err.get("message").asString}")
+            throw RaptoreumRPCException(err.get("code").asInt, err.get("message").asString)
         }
 
         return responseJson.get("result")
@@ -76,4 +78,7 @@ class RaptoreumClient(
 
     // Wallet Helpers
     fun getBalance(): Double = request("getbalance").asDouble
+    fun validateAddress(address: String): JsonElement = request("validateaddress", address)
+    fun sendMany(amounts: Map<String, Double>, minconf: Int = 1, comment: String = ""): String =
+        request("sendmany", "", amounts, minconf, comment).asString
 }

@@ -4,7 +4,14 @@ using HTTP
 using JSON3
 using Base64
 
-export RaptoreumClient, request, getblockchaininfo, getblockcount, getbalance
+export RaptoreumClient, RaptoreumRPCException, request, getblockchaininfo, getblockcount, getbalance, validateaddress, sendmany
+
+struct RaptoreumRPCException <: Exception
+    code::Int
+    message::String
+end
+
+Base.showerror(io::IO, e::RaptoreumRPCException) = print(io, "RPC Error [", e.code, "]: ", e.message)
 
 struct RaptoreumClient
     url::String
@@ -42,7 +49,7 @@ function request(client::RaptoreumClient, method::String, params::Vector=Any[])
         
         parsed = JSON3.read(String(response.body))
         if haskey(parsed, :error) && parsed.error !== nothing
-            error("RPC Error [$(parsed.error.code)]: $(parsed.error.message)")
+            throw(RaptoreumRPCException(parsed.error.code, parsed.error.message))
         end
         
         return parsed.result
@@ -54,5 +61,7 @@ end
 getblockchaininfo(client::RaptoreumClient) = request(client, "getblockchaininfo")
 getblockcount(client::RaptoreumClient) = request(client, "getblockcount")
 getbalance(client::RaptoreumClient) = request(client, "getbalance")
+validateaddress(client::RaptoreumClient, address::String) = request(client, "validateaddress", [address])
+sendmany(client::RaptoreumClient, amounts::Dict{String, Float64}, minconf::Int=1, comment::String="") = request(client, "sendmany", ["", amounts, minconf, comment])
 
 end # module

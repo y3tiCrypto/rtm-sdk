@@ -32,6 +32,20 @@ function raptoreum.new(host, port, user, password, use_ssl)
         end
         local result = handle:read("*a")
         handle:close()
+
+        if result and result:find('"error":') and not result:find('"error":%s*null') then
+            local code = -1
+            local message = "Unknown RPC Error"
+            local code_str = result:match('"code":%s*(-?%d+)')
+            if code_str then
+                code = tonumber(code_str)
+            end
+            local message_str = result:match('"message":%s*"([^"]*)"')
+            if message_str then
+                message = message_str
+            end
+            error("RPC Error [" .. code .. "]: " .. message)
+        end
         
         return result
     end
@@ -46,6 +60,22 @@ function raptoreum.new(host, port, user, password, use_ssl)
 
     function self:getbalance()
         return self:request("getbalance")
+    end
+
+    function self:validateaddress(address)
+        return self:request("validateaddress", string.format('["%s"]', escape_str(address)))
+    end
+
+    function self:sendmany(amounts_table, minconf, comment)
+        minconf = minconf or 1
+        comment = comment or ""
+        local kv = {}
+        for k, v in pairs(amounts_table) do
+            table.insert(kv, string.format('"%s":%s', escape_str(k), tostring(v)))
+        end
+        local amounts_json = "{" .. table.concat(kv, ",") .. "}"
+        local params = string.format('["",%s,%d,"%s"]', amounts_json, minconf, escape_str(comment))
+        return self:request("sendmany", params)
     end
 
     return self

@@ -75,6 +75,22 @@ Sends RTM from the wallet to a target address.
     *   `subtractfeefromamount` (boolean, optional, default: `false`)
 *   **Result**: String (Transaction Hash hex)
 
+### 4. `validateaddress`
+Returns details about the given Raptoreum address.
+*   **Parameters**:
+    *   `address` (string, required): The Raptoreum address to validate.
+*   **Result**: Object containing address validation properties (e.g. `isvalid` boolean, `address` string, `scriptPubKey` hex, etc.).
+
+### 5. `sendmany`
+Sends RTM to multiple addresses in a single transaction.
+*   **Parameters**:
+    *   `from_account` (string, required): Account name (must be empty string `""` for default account).
+    *   `amounts` (object, required): A JSON object mapping RTM addresses to payment amounts (e.g. `{"address1": 10.5, "address2": 2.0}`).
+    *   `minconf` (number, optional, default: `1`): Minimum confirmations of UTXOs to use.
+    *   `comment` (string, optional): A comment to describe the transaction.
+    *   `subtractfeefrom` (array of strings, optional): Array of addresses to subtract transaction fees from.
+*   **Result**: String (Transaction Hash hex)
+
 ---
 
 ## 💎 Category 3: Custom Asset Layer (RIPs)
@@ -118,3 +134,17 @@ Queries the status of the smartnode running on the node.
 Returns the status list of all smartnodes registered on the network.
 *   **Parameters**: None
 *   **Result**: Object mapping smartnode outputs to status.
+
+---
+
+## ⚠️ Category 5: RPC Error Handling
+
+Every SDK client parses error responses from the Raptoreum Core JSON-RPC node. If an error payload is returned, the client throws a custom exception `RaptoreumRPCException` (or language-equivalent casing, e.g., `RaptoreumRPCError`, `RaptoreumRpcException`).
+
+### Standard Exception Structure:
+*   `code` (int): The negative integer error code returned by the daemon.
+    *   `-1`: Generic model/JSON error.
+    *   `-4`: Wallet error (e.g., wallet locked, invalid address).
+    *   `-6`: Insufficient funds.
+    *   `-28`: Node warming up.
+*   `message` (string): The detailed error message explaining the cause.

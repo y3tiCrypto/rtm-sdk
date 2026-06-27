@@ -34,11 +34,17 @@ EOF
     auth="-u ${RTM_USER}:${RTM_PASS}"
   fi
 
-  curl -s -X POST \
+  local response
+  response=$(curl -s -X POST \
        -H "Content-Type: application/json" \
        $auth \
        -d "$payload" \
-       "$url"
+       "$url")
+
+  if echo "$response" | grep -q '"error":' && ! echo "$response" | grep -qE '"error":\s*null'; then
+    echo "$response" >&2
+  fi
+  echo "$response"
 }
 
 rtm_getblockchaininfo() {
@@ -51,4 +57,15 @@ rtm_getblockcount() {
 
 rtm_getbalance() {
   rtm_request "getbalance" "[]"
+}
+
+rtm_validateaddress() {
+  rtm_request "validateaddress" "[\"$1\"]"
+}
+
+rtm_sendmany() {
+  local amounts="$1"
+  local minconf="${2:-1}"
+  local comment="${3:-""}"
+  rtm_request "sendmany" "[\"\", ${amounts}, ${minconf}, \"${comment}\"]"
 }

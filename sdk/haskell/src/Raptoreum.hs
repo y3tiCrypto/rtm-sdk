@@ -3,8 +3,11 @@
 
 module Raptoreum (
     RaptoreumClient(..),
+    RaptoreumRPCError(..),
     newClient,
-    request
+    request,
+    validateaddress,
+    sendmany
 ) where
 
 import Data.Aeson
@@ -29,9 +32,16 @@ data RPCRequest = RPCRequest {
 
 instance ToJSON RPCRequest
 
+data RaptoreumRPCError = RaptoreumRPCError {
+    code    :: Int,
+    message :: T.Text
+} deriving (Show, Generic)
+
+instance FromJSON RaptoreumRPCError
+
 data RPCResponse = RPCResponse {
     result :: Maybe Value,
-    error  :: Maybe Value
+    error  :: Maybe RaptoreumRPCError
 } deriving (Show, Generic)
 
 instance FromJSON RPCResponse
@@ -60,7 +70,13 @@ request client m ps = do
     case eitherDecode body of
         Left err -> return $ Left ("JSON Decode Error: " ++ err)
         Right rpcResp -> case Raptoreum.error rpcResp of
-            Just errVal -> return $ Left ("RPC Error: " ++ show errVal)
+            Just errVal -> return $ Left ("RPC Error [" ++ show (code errVal) ++ "]: " ++ T.unpack (message errVal))
             Nothing -> case result rpcResp of
                 Just resVal -> return $ Right resVal
                 Nothing -> return $ Right Null
+
+validateaddress :: RaptoreumClient -> T.Text -> IO (Either String Value)
+validateaddress client addr = request client "validateaddress" [toJSON addr]
+
+sendmany :: RaptoreumClient -> Value -> Int -> T.Text -> IO (Either String Value)
+sendmany client amounts minconf comment = request client "sendmany" [toJSON ("" :: T.Text), amounts, toJSON minconf, toJSON comment]

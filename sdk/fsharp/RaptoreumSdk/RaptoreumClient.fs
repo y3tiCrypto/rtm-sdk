@@ -7,6 +7,10 @@ open System.Text
 open System.Text.Json
 open System.Threading.Tasks
 
+type RaptoreumRPCException(code: int, message: string) =
+    inherit Exception(sprintf "RPC Error [%d]: %s" code message)
+    member this.Code = code
+
 type RaptoreumClient(host: string, port: int, user: string, password: string, useSsl: bool) =
     let scheme = if useSsl then "https" else "http"
     let baseUrl = sprintf "%s://%s:%d/" scheme host port
@@ -24,7 +28,7 @@ type RaptoreumClient(host: string, port: int, user: string, password: string, us
 
     member this.RequestAsync(methodName: string, [<ParamArray>] parameters: obj[]) : Task<JsonElement> =
         task {
-            let payload = {| jsonrpc = "1.0"; id = "rtm-sdk-fsharp"; method = methodName; params = parameters |}
+            let payload = {| jsonrpc = "1.0"; id = "rtm-sdk-fsharp"; method = methodName; ``params`` = parameters |}
             let jsonPayload = JsonSerializer.Serialize(payload)
             use content = new StringContent(jsonPayload, Encoding.UTF8, "application/json")
             
@@ -36,11 +40,11 @@ type RaptoreumClient(host: string, port: int, user: string, password: string, us
             use doc = JsonDocument.Parse(responseString)
             let root = doc.RootElement.Clone()
             
-            if root.TryGetProperty("error", ref (new JsonElement())) && root.GetProperty("error").ValueKind <> JsonValueKind.Null then
-                let errProp = root.GetProperty("error")
+            let mutable errProp = new JsonElement()
+            if root.TryGetProperty("error", &errProp) && errProp.ValueKind <> JsonValueKind.Null then
                 let code = errProp.GetProperty("code").GetInt32()
                 let message = errProp.GetProperty("message").GetString()
-                raise (new Exception(sprintf "RPC Error [%d]: %s" code message))
+                raise (new RaptoreumRPCException(code, message))
                 
             return root.GetProperty("result").Clone()
         }
@@ -48,3 +52,6 @@ type RaptoreumClient(host: string, port: int, user: string, password: string, us
     member this.GetBlockchainInfoAsync() = this.RequestAsync("getblockchaininfo", [||])
     member this.GetBlockCountAsync() = this.RequestAsync("getblockcount", [||])
     member this.GetBalanceAsync() = this.RequestAsync("getbalance", [||])
+    member this.ValidateAddressAsync(address: string) = this.RequestAsync("validateaddress", [| address |])
+    member this.SendManyAsync(amounts: System.Collections.Generic.IDictionary<string, double>, minconf: int, comment: string) = 
+        this.RequestAsync("sendmany", [| "" :> obj; amounts :> obj; minconf :> obj; comment :> obj |])

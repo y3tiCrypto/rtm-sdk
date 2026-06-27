@@ -12,6 +12,17 @@ import java.time.Duration;
 import java.util.Base64;
 
 public class RaptoreumClient {
+    public static class RaptoreumRPCException extends RuntimeException {
+        private final int code;
+        public RaptoreumRPCException(int code, String message) {
+            super("RPC Error [" + code + "]: " + message);
+            this.code = code;
+        }
+        public int getCode() {
+            return code;
+        }
+    }
+
     private final String url;
     private final String authHeader;
     private final HttpClient httpClient;
@@ -61,7 +72,7 @@ public class RaptoreumClient {
         JsonObject responseJson = gson.fromJson(response.body(), JsonObject.class);
         if (responseJson.has("error") && !responseJson.get("error").isJsonNull()) {
             JsonObject err = responseJson.getAsJsonObject("error");
-            throw new RuntimeException("RPC Error [" + err.get("code").getAsInt() + "]: " + err.get("message").getAsString());
+            throw new RaptoreumRPCException(err.get("code").getAsInt(), err.get("message").getAsString());
         }
 
         return responseJson.get("result");
@@ -83,5 +94,13 @@ public class RaptoreumClient {
     // Wallet API
     public double getBalance() throws Exception {
         return request("getbalance").getAsDouble();
+    }
+
+    public JsonElement validateAddress(String address) throws Exception {
+        return request("validateaddress", address);
+    }
+
+    public String sendMany(java.util.Map<String, Double> amounts, int minconf, String comment) throws Exception {
+        return request("sendmany", "", amounts, minconf, comment).getAsString();
     }
 }

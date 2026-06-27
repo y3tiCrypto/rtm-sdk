@@ -48,7 +48,10 @@ function New-RaptoreumClient {
                 $reader = New-Object System.IO.StreamReader($stream)
                 $errBody = $reader.ReadToEnd() | ConvertFrom-Json
                 if ($null -ne $errBody.error) {
-                    throw "RPC Error [$($errBody.error.code)]: $($errBody.error.message)"
+                    $rpcException = New-Object System.Management.Automation.RuntimeException("RPC Error [$($errBody.error.code)]: $($errBody.error.message)")
+                    $rpcException | Add-Member -NotePropertyName "Code" -NotePropertyValue $errBody.error.code
+                    $rpcException | Add-Member -NotePropertyName "RPCMessage" -NotePropertyValue $errBody.error.message
+                    throw $rpcException
                 }
             }
             throw $_
@@ -66,6 +69,20 @@ function New-RaptoreumClient {
 
     $clientObj | Add-Member -MemberType ScriptMethod -Name "GetBalance" -Value {
         return $this.Request("getbalance")
+    }
+
+    $clientObj | Add-Member -MemberType ScriptMethod -Name "ValidateAddress" -Value {
+        param([string]$Address)
+        return $this.Request("validateaddress", @($Address))
+    }
+
+    $clientObj | Add-Member -MemberType ScriptMethod -Name "SendMany" -Value {
+        param(
+            [hashtable]$Amounts,
+            [int]$MinConf = 1,
+            [string]$Comment = ""
+        )
+        return $this.Request("sendmany", @("", $Amounts, $MinConf, $Comment))
     }
 
     return $clientObj

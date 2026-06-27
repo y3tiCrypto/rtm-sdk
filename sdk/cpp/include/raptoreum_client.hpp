@@ -1,7 +1,21 @@
 #pragma once
 #include <string>
+#include <stdexcept>
 
 namespace raptoreum {
+
+class RaptoreumRPCException : public std::runtime_error {
+public:
+    RaptoreumRPCException(int code, const std::string& message)
+        : std::runtime_error("RPC Error [" + std::to_string(code) + "]: " + message), code_(code), message_(message) {}
+    
+    int code() const { return code_; }
+    std::string message() const { return message_; }
+
+private:
+    int code_;
+    std::string message_;
+};
 
 class RaptoreumClient {
 public:
@@ -23,6 +37,8 @@ public:
     std::string getbalance();
     std::string getnewaddress(const std::string& label = "", const std::string& address_type = "legacy");
     std::string sendtoaddress(const std::string& address, double amount);
+    std::string validateaddress(const std::string& address);
+    std::string sendmany(const std::string& amounts_json, int minconf = 1, const std::string& comment = "");
 
 private:
     std::string host_;
