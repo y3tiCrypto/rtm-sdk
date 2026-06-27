@@ -1,11 +1,14 @@
-package rtm
+package raptoreum
 
 import (
 	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
+	"math/rand"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -16,6 +19,8 @@ type Client struct {
 	pass       string
 	useSsl     bool
 	httpClient *http.Client
+	MaxRetries int
+	RetryDelay time.Duration
 }
 
 type RPCRequest struct {
@@ -41,25 +46,86 @@ func (e *RaptoreumRPCError) Error() string {
 }
 
 func NewClient(host string, port int, user string, pass string, useSsl bool) *Client {
+	// Standard transport automatically pools TCP connections (Keep-Alive)
+	transport := &http.Transport{
+		MaxIdleConns:        32,
+		MaxIdleConnsPerHost: 32,
+		IdleConnTimeout:     90 * time.Second,
+	}
+
 	return &Client{
-		host:   host,
-		port:   port,
-		user:   user,
-		pass:   pass,
-		useSsl: useSsl,
+		host:       host,
+		port:       port,
+		user:       user,
+		pass:       pass,
+		useSsl:     useSsl,
+		MaxRetries: 3,
+		RetryDelay: 1 * time.Second,
 		httpClient: &http.Client{
-			Timeout: 30 * time.Second,
+			Transport: transport,
+			Timeout:   30 * time.Second,
 		},
 	}
 }
 
-func (c *Client) Call(method string, params ...interface{}) (json.RawMessage, error) {
+func (c *Client) postRaw(payload interface{}) ([]byte, error) {
 	protocol := "http"
 	if c.useSsl {
 		protocol = "https"
 	}
 	url := fmt.Sprintf("%s://%s:%d/", protocol, c.host, c.port)
 
+	bodyBytes, err := json.Marshal(payload)
+	if err != nil {
+		return nil, fmt.Errorf("marshal request error: %w", err)
+	}
+
+	var lastErr error
+	for attempt := 0; attempt <= c.MaxRetries; attempt++ {
+		req, err := http.NewRequest("POST", url, bytes.NewBuffer(bodyBytes))
+		if err != nil {
+			return nil, fmt.Errorf("create request error: %w", err)
+		}
+
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Connection", "keep-alive")
+		if c.user != "" || c.pass != "" {
+			req.SetBasicAuth(c.user, c.pass)
+		}
+
+		resp, err := c.httpClient.Do(req)
+		if err != nil {
+			lastErr = err
+		} else {
+			if resp.StatusCode == 429 {
+				resp.Body.Close()
+				lastErr = fmt.Errorf("HTTP Error 429: Too Many Requests")
+			} else if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusInternalServerError {
+				resp.Body.Close()
+				lastErr = fmt.Errorf("HTTP error: received status %d", resp.StatusCode)
+			} else {
+				respBytes, err := io.ReadAll(resp.Body)
+				resp.Body.Close()
+				if err != nil {
+					lastErr = err
+				} else {
+					return respBytes, nil
+				}
+			}
+		}
+
+		if attempt < c.MaxRetries {
+			// Exponential backoff + jitter
+			backoff := float64(c.RetryDelay) * math.Pow(2, float64(attempt))
+			jitter := rand.Float64() * 500.0 * float64(time.Millisecond)
+			time.Sleep(time.Duration(backoff) + time.Duration(jitter))
+		}
+	}
+
+	return nil, fmt.Errorf("post execution failed after retries: %w", lastErr)
+}
+
+func (c *Client) Call(method string, params ...interface{}) (json.RawMessage, error) {
 	reqPayload := RPCRequest{
 		JSONRPC: "1.0",
 		ID:      "rtm-sdk-go",
@@ -67,34 +133,9 @@ func (c *Client) Call(method string, params ...interface{}) (json.RawMessage, er
 		Params:  params,
 	}
 
-	bodyBytes, err := json.Marshal(reqPayload)
+	respBytes, err := c.postRaw(reqPayload)
 	if err != nil {
-		return nil, fmt.Errorf("marshal request error: %w", err)
-	}
-
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(bodyBytes))
-	if err != nil {
-		return nil, fmt.Errorf("create request error: %w", err)
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-	if c.user != "" || c.pass != "" {
-		req.SetBasicAuth(c.user, c.pass)
-	}
-
-	resp, err := c.httpClient.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("http execute error: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusInternalServerError {
-		return nil, fmt.Errorf("http error: received status %d", resp.StatusCode)
-	}
-
-	respBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("read response body error: %w", err)
+		return nil, err
 	}
 
 	var rpcResp RPCResponse
@@ -103,10 +144,69 @@ func (c *Client) Call(method string, params ...interface{}) (json.RawMessage, er
 	}
 
 	if rpcResp.Error != nil {
-		return rpcResp.Error
+		return nil, rpcResp.Error
 	}
 
 	return rpcResp.Result, nil
+}
+
+type RaptoreumBatch struct {
+	client   *Client
+	requests []RPCRequest
+}
+
+func (c *Client) CreateBatch() *RaptoreumBatch {
+	return &RaptoreumBatch{
+		client:   c,
+		requests: make([]RPCRequest, 0),
+	}
+}
+
+func (b *RaptoreumBatch) Add(method string, params ...interface{}) {
+	idStr := fmt.Sprintf("rtm-batch-%d", len(b.requests))
+	b.requests = append(b.requests, RPCRequest{
+		JSONRPC: "1.0",
+		ID:      idStr,
+		Method:  method,
+		Params:  params,
+	})
+}
+
+func (b *RaptoreumBatch) Execute() ([]interface{}, error) {
+	if len(b.requests) == 0 {
+		return nil, nil
+	}
+
+	respBytes, err := b.client.postRaw(b.requests)
+	if err != nil {
+		return nil, err
+	}
+
+	var rpcResps []RPCResponse
+	if err := json.Unmarshal(respBytes, &rpcResps); err != nil {
+		// Single error object returned instead of array
+		var rpcResp RPCResponse
+		if err2 := json.Unmarshal(respBytes, &rpcResp); err2 == nil && rpcResp.Error != nil {
+			return nil, rpcResp.Error
+		}
+		return nil, fmt.Errorf("unmarshal batch response error: %w", err)
+	}
+
+	results := make([]interface{}, len(b.requests))
+	for _, resp := range rpcResps {
+		if strings.HasPrefix(resp.ID, "rtm-batch-") {
+			var idx int
+			_, err := fmt.Sscanf(resp.ID, "rtm-batch-%d", &idx)
+			if err == nil && idx >= 0 && idx < len(results) {
+				if resp.Error != nil {
+					results[idx] = resp.Error
+				} else {
+					results[idx] = resp.Result
+				}
+			}
+		}
+	}
+	return results, nil
 }
 
 // Blockchain Helpers

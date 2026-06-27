@@ -74,9 +74,9 @@ Select your language of choice to view setup details, package configurations, an
 - [x] Add ZeroMQ subscription modules to capture block and transaction alerts from the local node.
 - [x] Integrate lightweight WebSocket clients for streaming public explorer updates.
 
-### 📍 Phase 8: Connection Pooling, Request Batching & Rate Limiting (Milestone 8)
-- [ ] Implement client-side connection pooling (HTTP persistent connections) to minimize handshake latency.
-- [ ] Introduce JSON-RPC array request batching and adaptive exponential backoff rate limiting.
+### 📍 Phase 8: Connection Pooling, Request Batching & Rate Limiting (Milestone 8) - **Completed**
+- [x] Implement client-side connection pooling (HTTP persistent connections) to minimize handshake latency.
+- [x] Introduce JSON-RPC array request batching and adaptive exponential backoff rate limiting.
 
 ### 📍 Phase 9: Unified Exception Taxonomy (Milestone 9)
 - [ ] Replace generic exception classes with specific typed structures (e.g. `InsufficientFundsException`, `WalletLockedException`).

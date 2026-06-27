@@ -17,8 +17,56 @@ class RaptoreumClient:
         self.user = user
         self.password = password
         self.use_ssl = use_ssl
-        scheme = "https" if use_ssl else "http"
-        self.url = f"{scheme}://{host}:{port}/"
+        self.max_retries = 3
+        self.retry_delay = 1.0
+        self._conn = None
+
+    def _get_connection(self):
+        import http.client
+        if self._conn is None:
+            if self.use_ssl:
+                self._conn = http.client.HTTPSConnection(self.host, self.port, timeout=30)
+            else:
+                self._conn = http.client.HTTPConnection(self.host, self.port, timeout=30)
+        return self._conn
+
+    def _post(self, payload):
+        import time
+        import random
+        
+        headers = {
+            "Content-Type": "application/json",
+            "Connection": "keep-alive"
+        }
+        if self.user or self.password:
+            auth_str = f"{self.user}:{self.password}".encode("utf-8")
+            auth_header = "Basic " + base64.b64encode(auth_str).decode("utf-8")
+            headers["Authorization"] = auth_header
+            
+        data = json.dumps(payload).encode("utf-8")
+        
+        for attempt in range(self.max_retries + 1):
+            conn = self._get_connection()
+            try:
+                conn.request("POST", "/", body=data, headers=headers)
+                response = conn.getresponse()
+                resp_bytes = response.read()
+                
+                if response.status == 429:
+                    raise Exception("HTTP Error 429: Too Many Requests")
+                    
+                resp_data = json.loads(resp_bytes.decode("utf-8"))
+                return resp_data
+            except Exception as e:
+                if self._conn:
+                    self._conn.close()
+                    self._conn = None
+                
+                if attempt == self.max_retries:
+                    raise e
+                    
+                sleep_time = self.retry_delay * (2 ** attempt) + random.uniform(0, 0.5)
+                time.sleep(sleep_time)
 
     def request(self, method, params=None):
         if params is None:
@@ -31,33 +79,57 @@ class RaptoreumClient:
             "params": params
         }
         
-        data = json.dumps(payload).encode("utf-8")
-        req = urllib.request.Request(self.url, data=data, headers={"Content-Type": "application/json"})
-        
-        if self.user or self.password:
-            auth_str = f"{self.user}:{self.password}".encode("utf-8")
-            auth_header = b"Basic " + base64.b64encode(auth_str)
-            req.add_header("Authorization", auth_header.decode("utf-8"))
+        resp_data = self._post(payload)
+        if resp_data.get("error"):
+            err = resp_data["error"]
+            raise RaptoreumRPCException(err.get("code"), err.get("message"))
+        return resp_data.get("result")
+
+    def create_batch(self):
+        return RaptoreumBatch(self)
+
+
+class RaptoreumBatch:
+    def __init__(self, client):
+        self.client = client
+        self.requests = []
+
+    def add(self, method, params=None):
+        if params is None:
+            params = []
+        self.requests.append({
+            "jsonrpc": "1.0",
+            "id": f"rtm-batch-{len(self.requests)}",
+            "method": method,
+            "params": params
+        })
+
+    def execute(self):
+        if not self.requests:
+            return []
             
-        try:
-            with urllib.request.urlopen(req, timeout=30) as response:
-                resp_data = json.loads(response.read().decode("utf-8"))
-                if resp_data.get("error"):
-                    err = resp_data["error"]
-                    raise RaptoreumRPCException(err.get("code"), err.get("message"))
-                return resp_data.get("result")
-        except urllib.error.HTTPError as e:
-            # RPC node often returns 500 on execution error with details in JSON
-            try:
-                resp_data = json.loads(e.read().decode("utf-8"))
-                if resp_data.get("error"):
-                    err = resp_data["error"]
-                    raise RaptoreumRPCException(err.get("code"), err.get("message"))
-            except Exception:
-                pass
-            raise Exception(f"HTTP Error {e.code}: {e.reason}")
-        except urllib.error.URLError as e:
-            raise Exception(f"Network Error: {e.reason}")
+        resp_data = self.client._post(self.requests)
+        if not isinstance(resp_data, list):
+            if isinstance(resp_data, dict) and resp_data.get("error"):
+                err = resp_data["error"]
+                raise RaptoreumRPCException(err.get("code"), err.get("message"))
+            raise Exception("Invalid batch response from server")
+            
+        results = [None] * len(self.requests)
+        for resp in resp_data:
+            resp_id = resp.get("id")
+            if resp_id and resp_id.startswith("rtm-batch-"):
+                try:
+                    idx = int(resp_id.split("-")[-1])
+                    if 0 <= idx < len(results):
+                        if resp.get("error"):
+                            err = resp["error"]
+                            results[idx] = RaptoreumRPCException(err.get("code"), err.get("message"))
+                        else:
+                            results[idx] = resp.get("result")
+                except ValueError:
+                    pass
+        return results
 
     # Blockchain API
     def getblockchaininfo(self):

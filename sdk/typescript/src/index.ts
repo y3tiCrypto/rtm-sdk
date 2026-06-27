@@ -4,6 +4,8 @@ export interface ClientOptions {
   user?: string;
   password?: string;
   useSsl?: boolean;
+  maxRetries?: number;
+  retryDelay?: number;
 }
 
 export class RaptoreumRPCError extends Error {
@@ -19,6 +21,8 @@ export class RaptoreumClient {
   private url: string;
   private user?: string;
   private password?: string;
+  public maxRetries: number;
+  public retryDelay: number;
 
   constructor(options: ClientOptions = {}) {
     const host = options.host || '127.0.0.1';
@@ -27,11 +31,14 @@ export class RaptoreumClient {
     this.password = options.password;
     const scheme = options.useSsl ? 'https' : 'http';
     this.url = `${scheme}://${host}:${port}/`;
+    this.maxRetries = options.maxRetries ?? 3;
+    this.retryDelay = options.retryDelay ?? 1000;
   }
 
-  async request<T>(method: string, params: any[] = []): Promise<T> {
+  async _post(payload: any): Promise<any> {
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'Connection': 'keep-alive'
     };
 
     if (this.user || this.password) {
@@ -39,6 +46,35 @@ export class RaptoreumClient {
       headers['Authorization'] = `Basic ${auth}`;
     }
 
+    for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
+      try {
+        const response = await fetch(this.url, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(payload)
+        });
+
+        if (response.status === 429) {
+          throw new Error("HTTP Error 429: Too Many Requests");
+        }
+
+        if (!response.ok && response.status !== 500) {
+          throw new Error(`HTTP Error ${response.status}: ${response.statusText}`);
+        }
+
+        const json = await response.json();
+        return json;
+      } catch (err) {
+        if (attempt === this.maxRetries) {
+          throw err;
+        }
+        const delay = this.retryDelay * Math.pow(2, attempt) + Math.random() * 500;
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+
+  async request<T>(method: string, params: any[] = []): Promise<T> {
     const payload = {
       jsonrpc: '1.0',
       id: 'rtm-sdk-ts',
@@ -46,22 +82,16 @@ export class RaptoreumClient {
       params
     };
 
-    const response = await fetch(this.url, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(payload)
-    });
-
-    if (!response.ok && response.status !== 500) {
-      throw new Error(`HTTP Error ${response.status}: ${response.statusText}`);
-    }
-
-    const json = await response.json();
+    const json = await this._post(payload);
     if (json.error) {
       throw new RaptoreumRPCError(json.error.code, json.error.message);
     }
 
     return json.result as T;
+  }
+
+  createBatch(): RaptoreumBatch {
+    return new RaptoreumBatch(this);
   }
 
   // Blockchain API
@@ -447,5 +477,52 @@ export class RaptoreumZmqListener {
     if (this.sock) {
       this.sock.close();
     }
+  }
+}
+
+export class RaptoreumBatch {
+  private client: RaptoreumClient;
+  private requests: any[];
+
+  constructor(client: RaptoreumClient) {
+    this.client = client;
+    this.requests = [];
+  }
+
+  add(method: string, params: any[] = []): void {
+    this.requests.push({
+      jsonrpc: '1.0',
+      id: `rtm-batch-${this.requests.length}`,
+      method,
+      params
+    });
+  }
+
+  async execute(): Promise<any[]> {
+    if (this.requests.length === 0) return [];
+
+    const json = await this.client._post(this.requests);
+    if (!Array.isArray(json)) {
+      if (json && json.error) {
+        throw new RaptoreumRPCError(json.error.code, json.error.message);
+      }
+      throw new Error("Invalid batch response from server");
+    }
+
+    const results = new Array(this.requests.length).fill(null);
+    for (const resp of json) {
+      const id = resp.id;
+      if (id && id.startsWith('rtm-batch-')) {
+        const idx = parseInt(id.split('-').pop() || '0', 10);
+        if (idx >= 0 && idx < results.length) {
+          if (resp.error) {
+            results[idx] = new RaptoreumRPCError(resp.error.code, resp.error.message);
+          } else {
+            results[idx] = resp.result;
+          }
+        }
+      }
+    }
+    return results;
   }
 }

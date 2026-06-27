@@ -229,3 +229,21 @@ A native TCP ZMTP socket subscription client to capture publishers directly from
 *   **Methods**:
     *   `start(callback)` / `StartAsync(callback)`: Connects, performs ZMTP handshakes, subscribes to raw block and transaction topics, and streams message byte sequences to the callback.
     *   `stop()`: Closes the subscriber socket connection.
+
+---
+
+## 🗂️ Category 9: Bulk Batching & Rate Limiting
+
+Exposed in higher-tier SDK languages (Python, JS, TS, Go, C#) for connection optimization and bulk batch queries.
+
+### 1. `RaptoreumBatch`
+A request builder to execute multiple JSON-RPC calls in a single network round-trip.
+*   **Initialization**: Created using `client.create_batch()` or `client.CreateBatch()`.
+*   **Methods**:
+    *   `add(method, params)`: Queues a new JSON-RPC command into the batch queue.
+    *   `execute()` / `ExecuteAsync()`: Performs the HTTP POST raw array request and returns a list containing results in the exact same index order. Individual query errors are returned inside the results array as exception objects (preserving overall batch integrity).
+
+### 2. Retry Configurations
+Properties to configure client-side resilient retries on network drop or HTTP status code `429` (Too Many Requests):
+*   `maxRetries` / `max_retries`: Number of retry attempts (default: 3).
+*   `retryDelay` / `retry_delay`: Delay base in seconds or milliseconds (default: 1.0s / 1000ms). Retries execute automatically using exponential backoff with random jitter.

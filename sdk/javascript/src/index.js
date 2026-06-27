@@ -15,11 +15,14 @@ class RaptoreumClient {
     this.useSsl = useSsl;
     const scheme = useSsl ? 'https' : 'http';
     this.url = `${scheme}://${host}:${port}/`;
+    this.maxRetries = 3;
+    this.retryDelay = 1000;
   }
 
-  async request(method, params = []) {
+  async _post(payload) {
     const headers = {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'Connection': 'keep-alive'
     };
 
     if (this.user || this.password) {
@@ -27,6 +30,35 @@ class RaptoreumClient {
       headers['Authorization'] = `Basic ${auth}`;
     }
 
+    for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
+      try {
+        const response = await fetch(this.url, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(payload)
+        });
+
+        if (response.status === 429) {
+          throw new Error("HTTP Error 429: Too Many Requests");
+        }
+
+        if (!response.ok && response.status !== 500) {
+          throw new Error(`HTTP Error ${response.status}: ${response.statusText}`);
+        }
+
+        const json = await response.json();
+        return json;
+      } catch (err) {
+        if (attempt === this.maxRetries) {
+          throw err;
+        }
+        const delay = this.retryDelay * Math.pow(2, attempt) + Math.random() * 500;
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+
+  async request(method, params = []) {
     const payload = {
       jsonrpc: '1.0',
       id: 'rtm-sdk-js',
@@ -34,23 +66,60 @@ class RaptoreumClient {
       params
     };
 
-    const response = await fetch(this.url, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(payload)
-    });
-
-    if (!response.ok && response.status !== 500) {
-      throw new Error(`HTTP Error ${response.status}: ${response.statusText}`);
-    }
-
-    const json = await response.json();
+    const json = await this._post(payload);
     if (json.error) {
       throw new RaptoreumRPCError(json.error.code, json.error.message);
     }
 
     return json.result;
   }
+
+  createBatch() {
+    return new RaptoreumBatch(this);
+  }
+}
+
+class RaptoreumBatch {
+  constructor(client) {
+    this.client = client;
+    this.requests = [];
+  }
+
+  add(method, params = []) {
+    this.requests.push({
+      jsonrpc: '1.0',
+      id: `rtm-batch-${this.requests.length}`,
+      method,
+      params
+    });
+  }
+
+  async execute() {
+    if (this.requests.length === 0) return [];
+
+    const json = await this.client._post(this.requests);
+    if (!Array.isArray(json)) {
+      if (json && json.error) {
+        throw new RaptoreumRPCError(json.error.code, json.error.message);
+      }
+      throw new Error("Invalid batch response from server");
+    }
+
+    const results = new Array(this.requests.length).fill(null);
+    for (const resp of json) {
+      const id = resp.id;
+      if (id && id.startsWith('rtm-batch-')) {
+        const idx = parseInt(id.split('-').pop(), 10);
+        if (idx >= 0 && idx < results.length) {
+          if (resp.error) {
+            results[idx] = new RaptoreumRPCError(resp.error.code, resp.error.message);
+          } else {
+            results[idx] = resp.result;
+          }
+        }
+      }
+    }
+    return results;
 
   // Blockchain API
   getBlockchainInfo() { return this.request('getblockchaininfo'); }
@@ -409,5 +478,6 @@ module.exports = {
   RaptoreumWallet, 
   RaptoreumTransactionBuilder,
   RaptoreumWebSocketClient,
-  RaptoreumZmqListener
+  RaptoreumZmqListener,
+  RaptoreumBatch
 };
