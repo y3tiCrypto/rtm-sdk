@@ -70,9 +70,9 @@ Select your language of choice to view setup details, package configurations, an
 - [x] Implement local coin selection (FIFO, Knapsack) algorithms to manage inputs/fees offline.
 - [x] Build offline raw transaction serialization wrappers across the client packages.
 
-### 📍 Phase 7: Live Event Streaming (Milestone 7)
-- [ ] Add ZeroMQ subscription modules to capture block and transaction alerts from the local node.
-- [ ] Integrate lightweight WebSocket clients for streaming public explorer updates.
+### 📍 Phase 7: Live Event Streaming (Milestone 7) - **Completed**
+- [x] Add ZeroMQ subscription modules to capture block and transaction alerts from the local node.
+- [x] Integrate lightweight WebSocket clients for streaming public explorer updates.
 
 ### 📍 Phase 8: Connection Pooling, Request Batching & Rate Limiting (Milestone 8)
 - [ ] Implement client-side connection pooling (HTTP persistent connections) to minimize handshake latency.

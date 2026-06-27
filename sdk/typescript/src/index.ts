@@ -362,3 +362,90 @@ export class RaptoreumTransactionBuilder {
     throw new Error("Insufficient funds");
   }
 }
+
+export class RaptoreumWebSocketClient {
+  url: string;
+  ws: any;
+  callbacks: { [key: string]: Function };
+
+  constructor(url: string) {
+    this.url = url;
+    this.ws = null;
+    this.callbacks = {};
+  }
+
+  connect(): void {
+    let WebSocket: any;
+    try {
+      WebSocket = require('ws');
+    } catch (err) {
+      throw new Error("Please install 'ws' dependency to use WebSocket client: npm install ws");
+    }
+
+    this.ws = new WebSocket(this.url);
+
+    this.ws.on('open', () => {
+      if (this.callbacks['open']) this.callbacks['open']();
+    });
+
+    this.ws.on('message', (data: any) => {
+      if (this.callbacks['message']) this.callbacks['message'](data.toString());
+    });
+
+    this.ws.on('error', (err: any) => {
+      if (this.callbacks['error']) this.callbacks['error'](err);
+    });
+
+    this.ws.on('close', () => {
+      if (this.callbacks['close']) this.callbacks['close']();
+    });
+  }
+
+  on(event: string, callback: Function): void {
+    this.callbacks[event] = callback;
+  }
+
+  close(): void {
+    if (this.ws) {
+      this.ws.close();
+    }
+  }
+}
+
+export class RaptoreumZmqListener {
+  host: string;
+  port: number;
+  sock: any;
+
+  constructor(host: string = "127.0.0.1", port: number = 28332) {
+    this.host = host;
+    this.port = port;
+    this.sock = null;
+  }
+
+  async start(callback: (topic: string, message: Buffer) => void): Promise<void> {
+    let zmq: any;
+    try {
+      zmq = require('zeromq');
+    } catch (err) {
+      throw new Error("Please install 'zeromq' dependency to use ZMQ listener: npm install zeromq@6.0.0-beta.6");
+    }
+
+    this.sock = new zmq.Subscriber();
+    this.sock.connect(`tcp://${this.host}:${this.port}`);
+    this.sock.subscribe('rawtx');
+    this.sock.subscribe('rawblock');
+    this.sock.subscribe('hashblock');
+    this.sock.subscribe('hashtx');
+
+    for await (const [topic, msg] of this.sock) {
+      callback(topic.toString(), msg as Buffer);
+    }
+  }
+
+  stop(): void {
+    if (this.sock) {
+      this.sock.close();
+    }
+  }
+}

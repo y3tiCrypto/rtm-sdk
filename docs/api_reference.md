@@ -210,3 +210,22 @@ Performs local FIFO UTXO coin selection and calculates transaction fees.
     *   `targetAmountRtm` (number/string): Target amount to spend.
     *   `feeRateSatByte` (number, default: 1): Fee rate in Satoshis per byte.
 *   **Result**: Object/Pair containing array of selected UTXOs and the calculated fee.
+
+---
+
+## 📡 Category 8: Real-Time Event Streaming
+
+Exposed in higher-tier SDK languages (Python, JS, TS, Go, C#) for subscribing to live block and transaction events.
+
+### 1. `RaptoreumWebSocketClient`
+A WebSocket connection manager to stream events from explorer API nodes.
+*   **Methods**:
+    *   `connect()` / `ConnectAsync()`: Establishes connection to the websocket endpoint.
+    *   `on(event, callback)`: Binds a listener (e.g. `message`, `error`) to incoming websocket messages.
+    *   `close()` / `CloseAsync()`: Closes connection.
+
+### 2. `RaptoreumZmqListener`
+A native TCP ZMTP socket subscription client to capture publishers directly from local node ports.
+*   **Methods**:
+    *   `start(callback)` / `StartAsync(callback)`: Connects, performs ZMTP handshakes, subscribes to raw block and transaction topics, and streams message byte sequences to the callback.
+    *   `stop()`: Closes the subscriber socket connection.

@@ -324,4 +324,90 @@ class RaptoreumTransactionBuilder {
   }
 }
 
-module.exports = { RaptoreumClient, RaptoreumRPCError, RaptoreumWallet, RaptoreumTransactionBuilder };
+class RaptoreumWebSocketClient {
+  constructor(url) {
+    this.url = url;
+    this.ws = null;
+    this.callbacks = {};
+  }
+
+  connect() {
+    let WebSocket;
+    try {
+      WebSocket = require('ws');
+    } catch (err) {
+      throw new Error("Please install 'ws' dependency to use WebSocket client: npm install ws");
+    }
+
+    this.ws = new WebSocket(this.url);
+
+    this.ws.on('open', () => {
+      if (this.callbacks['open']) this.callbacks['open']();
+    });
+
+    this.ws.on('message', (data) => {
+      if (this.callbacks['message']) this.callbacks['message'](data.toString());
+    });
+
+    this.ws.on('error', (err) => {
+      if (this.callbacks['error']) this.callbacks['error'](err);
+    });
+
+    this.ws.on('close', () => {
+      if (this.callbacks['close']) this.callbacks['close']();
+    });
+  }
+
+  on(event, callback) {
+    this.callbacks[event] = callback;
+  }
+
+  close() {
+    if (this.ws) {
+      this.ws.close();
+    }
+  }
+}
+
+class RaptoreumZmqListener {
+  constructor(host = "127.0.0.1", port = 28332) {
+    this.host = host;
+    this.port = port;
+    this.sock = null;
+  }
+
+  async start(callback) {
+    let zmq;
+    try {
+      zmq = require('zeromq');
+    } catch (err) {
+      throw new Error("Please install 'zeromq' dependency to use ZMQ listener: npm install zeromq@6.0.0-beta.6");
+    }
+
+    this.sock = new zmq.Subscriber();
+    this.sock.connect(`tcp://${this.host}:${this.port}`);
+    this.sock.subscribe('rawtx');
+    this.sock.subscribe('rawblock');
+    this.sock.subscribe('hashblock');
+    this.sock.subscribe('hashtx');
+
+    for await (const [topic, msg] of this.sock) {
+      callback(topic.toString(), msg);
+    }
+  }
+
+  stop() {
+    if (this.sock) {
+      this.sock.close();
+    }
+  }
+}
+
+module.exports = { 
+  RaptoreumClient, 
+  RaptoreumRPCError, 
+  RaptoreumWallet, 
+  RaptoreumTransactionBuilder,
+  RaptoreumWebSocketClient,
+  RaptoreumZmqListener
+};

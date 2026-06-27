@@ -2,6 +2,7 @@ import json
 import urllib.request
 import urllib.error
 import base64
+import asyncio
 
 class RaptoreumRPCException(Exception):
     def __init__(self, code, message):
@@ -357,3 +358,127 @@ class RaptoreumTransactionBuilder:
                 
         raise ValueError("Insufficient funds")
 
+
+class RaptoreumWebSocketClient:
+    def __init__(self, url):
+        import urllib.parse
+        self.url = url
+        self.parsed = urllib.parse.urlparse(url)
+        self.reader = None
+        self.writer = None
+        self.connected = False
+        self.callbacks = {}
+
+    async def connect(self):
+        import ssl
+        host = self.parsed.hostname
+        port = self.parsed.port or (443 if self.parsed.scheme == 'wss' else 80)
+        
+        if self.parsed.scheme == 'wss':
+            ssl_context = ssl.create_default_context()
+            self.reader, self.writer = await asyncio.open_connection(host, port, ssl=ssl_context)
+        else:
+            self.reader, self.writer = await asyncio.open_connection(host, port)
+            
+        path = self.parsed.path or '/'
+        if self.parsed.query:
+            path += '?' + self.parsed.query
+            
+        handshake = (
+            f"GET {path} HTTP/1.1\r\n"
+            f"Host: {host}:{port}\r\n"
+            f"Upgrade: websocket\r\n"
+            f"Connection: Upgrade\r\n"
+            f"Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n"
+            f"Sec-WebSocket-Version: 13\r\n\r\n"
+        )
+        self.writer.write(handshake.encode())
+        await self.writer.drain()
+        
+        resp = b''
+        while b'\r\n\r\n' not in resp:
+            chunk = await self.reader.read(1024)
+            if not chunk:
+                break
+            resp += chunk
+            
+        self.connected = True
+        import asyncio as a
+        a.create_task(self._listen_loop())
+
+    def on(self, event, callback):
+        self.callbacks[event] = callback
+
+    async def _listen_loop(self):
+        try:
+            while self.connected:
+                header = await self.reader.readexactly(2)
+                opcode = header[0] & 0x0f
+                masked = header[1] & 0x80
+                payload_len = header[1] & 0x7f
+                
+                if payload_len == 126:
+                    len_bytes = await self.reader.readexactly(2)
+                    payload_len = int.from_bytes(len_bytes, 'big')
+                elif payload_len == 127:
+                    len_bytes = await self.reader.readexactly(8)
+                    payload_len = int.from_bytes(len_bytes, 'big')
+                    
+                mask = b''
+                if masked:
+                    mask = await self.reader.readexactly(4)
+                    
+                payload = await self.reader.readexactly(payload_len)
+                
+                if masked:
+                    payload = bytes(b ^ mask[i % 4] for i, b in enumerate(payload))
+                    
+                if opcode == 8:
+                    break
+                elif opcode == 1:
+                    text = payload.decode('utf-8')
+                    if 'message' in self.callbacks:
+                        self.callbacks['message'](text)
+        except Exception as e:
+            if 'error' in self.callbacks:
+                self.callbacks['error'](e)
+        finally:
+            self.connected = False
+
+    async def close(self):
+        self.connected = False
+        if self.writer:
+            self.writer.close()
+            await self.writer.wait_closed()
+
+
+class RaptoreumZmqListener:
+    def __init__(self, host="127.0.0.1", port=28332):
+        self.host = host
+        self.port = port
+        self.running = False
+
+    def start(self, callback):
+        try:
+            import zmq
+        except ImportError:
+            raise ImportError("Please install pyzmq to use ZeroMQ listeners: pip install pyzmq")
+            
+        self.running = True
+        context = zmq.Context()
+        socket = context.socket(zmq.SUB)
+        socket.connect(f"tcp://{self.host}:{self.port}")
+        socket.setsockopt_string(zmq.SUBSCRIBE, "rawtx")
+        socket.setsockopt_string(zmq.SUBSCRIBE, "rawblock")
+        socket.setsockopt_string(zmq.SUBSCRIBE, "hashblock")
+        socket.setsockopt_string(zmq.SUBSCRIBE, "hashtx")
+        
+        while self.running:
+            try:
+                topic, body, seq = socket.recv_multipart()
+                callback(topic.decode('utf-8'), body)
+            except Exception:
+                break
+
+    def stop(self):
+        self.running = False
